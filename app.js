@@ -28,7 +28,7 @@ app.configure('production', function(){
 });
 
 // Routes
-
+//will change this later so there is a route.js file
 app.get('/', routes.index);
 
 app.listen(3000, function(){
