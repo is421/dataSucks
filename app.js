@@ -4,22 +4,22 @@
  */
 
 var express = require('express')
-  , routes = require('./routes');
+  , routes = require('./routes')
+  , passport = require('passport')
+  , TwitterStrategy = require('passport-twitter').Strategy;
 
 var app = module.exports = express.createServer();
 
-app.use(express.cookieParser());
-app.use(express.session({secret: 'SUPERSECRET123'}));
-
 // Configuration
 
-app.configure(function(){
-  app.set('views', __dirname + '/views');
-  app.set('view engine', 'jade');
+app.configure(function() {
+  app.use(express.static('public'));
+  app.use(express.cookieParser());
   app.use(express.bodyParser());
-  app.use(express.methodOverride());
+  app.use(express.session({ secret: 'SUPERDUPERSECRET' }));
+  app.use(passport.initialize());
+  app.use(passport.session());
   app.use(app.router);
-  app.use(express.static(__dirname + '/public'));
 });
 
 app.configure('development', function(){
@@ -31,19 +31,25 @@ app.configure('production', function(){
 });
 
 
-var passport = require('passport')
-  , TwitterStrategy = require('passport-twitter').Strategy;
-
-
 //Setup the Twitter strategy
 passport.use(new TwitterStrategy({
     consumerKey: "EUGbXnHc7TSlFZxkHp69i0l7y",
     consumerSecret: "fSmqoroZtrybNHYSehI0U3iEWoPzHNLSz6Nxb4EyLoHAxxiGIZ",
-    callbackURL: "http://puppet.srihari.guru:3000/auth/twitter/callback"
+    callbackURL: "http://puppet.srihari.guru:3000/auth/twitter/callback",
   },
   function(token, tokenSecret, profile, done) {
+  	process.nextTick(function() {
+  		done(null, profile);
+  	});
 }));
 
+passport.serializeUser(function(user,done){
+	done(null, user);
+});
+
+passport.deserializeUser(function(obj,done){
+	done(null, obj);
+});
 
 // Routes
 
@@ -56,7 +62,8 @@ app.get('/auth/twitter', passport.authenticate('twitter'));
 //Use this route as the callback for the Twitter authentication.
 app.get('/auth/twitter/callback', passport.authenticate('twitter', {
   successRedirect: '/auth/twitter/youdidit',
-  failureRedirect: '/'}));
+  failureRedirect: '/',
+}));
 
 //Test!
 app.get('/auth/twitter/youdidit', function(req,res){
