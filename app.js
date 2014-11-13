@@ -4,19 +4,12 @@
  */
 
 var express = require('express')
-  , routes = require('./routes')
-  , passport = require('passport')
-  , TwitterStrategy = require('passport-twitter').Strategy;
-
-passport.use(new TwitterStrategy({
-    consumerKey: "EUGbXnHc7TSlFZxkHp69i0l7y",
-    consumerSecret: "fSmqoroZtrybNHYSehI0U3iEWoPzHNLSz6Nxb4EyLoHAxxiGIZ",
-    callbackURL: "http://puppet.srihari.guru:3000/auth/twitter/callback"
-  },
-  function(token, tokenSecret, profile, done) {
-}));
+  , routes = require('./routes');
 
 var app = module.exports = express.createServer();
+
+app.use(express.cookieParser());
+app.use(express.session({secret: 'SUPERSECRET123'}));
 
 // Configuration
 
@@ -27,8 +20,6 @@ app.configure(function(){
   app.use(express.methodOverride());
   app.use(app.router);
   app.use(express.static(__dirname + '/public'));
-  app.use(express.cookieParser());
-  app.use(express.session({secret: 'ABSOLUTELYWITHOUTADOUBTTHESAFESTSECRETEVERMADE'}));
 });
 
 app.configure('development', function(){
@@ -38,6 +29,21 @@ app.configure('development', function(){
 app.configure('production', function(){
   app.use(express.errorHandler());
 });
+
+
+var passport = require('passport')
+  , TwitterStrategy = require('passport-twitter').Strategy;
+
+
+//Setup the Twitter strategy
+passport.use(new TwitterStrategy({
+    consumerKey: "EUGbXnHc7TSlFZxkHp69i0l7y",
+    consumerSecret: "fSmqoroZtrybNHYSehI0U3iEWoPzHNLSz6Nxb4EyLoHAxxiGIZ",
+    callbackURL: "http://puppet.srihari.guru:3000/auth/twitter/callback"
+  },
+  function(token, tokenSecret, profile, done) {
+}));
+
 
 // Routes
 
