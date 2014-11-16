@@ -10,7 +10,10 @@ var express = require('express'),
     FacebookStrategy = require('passport-facebook').Strategy,
     GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,
     cookieParser = require('cookie-parser'),
-    expressSession = require('express-session');
+    expressSession = require('express-session'),
+    request = require('request'),
+    http = require('http'),
+    mongoose = require('mongoose');
 
 
 
@@ -19,6 +22,13 @@ var express = require('express'),
 var app = module.exports = express.createServer();
 
 // Configuration
+
+mongoose.connect('mongodb://localhost/project');
+
+require('./models/facebookUser');
+require('./models/googleUser');
+var FacebookUser = mongoose.model('FacebookUser');
+var GoogleUser = mongoose.model('GoogleUser');
 
 app.configure(function(){
   app.set('views', __dirname + '/views');
@@ -51,7 +61,25 @@ passport.use(new FacebookStrategy({
     callbackURL: "http://stevenbirkner.com:5000/auth/facebook/callback"
   },
   function(accessToken, refreshToken, profile, done) {
-    console.log(profile);
+
+
+    var facebookUser = new FacebookUser();
+
+    facebookUser.name = profile.name['givenName'] + ' ' + profile.name['familyName'];
+    facebookUser.profileLink = profile.profileUrl;
+    facebookUser.gender = profile.gender;
+    facebookUser.fbID = profile.id;
+
+    facebookUser.save(function (err) {
+      if(err) {
+        console.log(err)
+      } else {
+        console.log(facebookUser);
+      }
+
+    });
+    
+
     return done(null,false) 
   }
 ));
@@ -63,7 +91,26 @@ passport.use(new GoogleStrategy({
     callbackURL: "http://stevenbirkner.com:5000/auth/google/callback"
   },
   function(token, tokenSecret, profile, done) {
-      console.log(profile);
+  
+
+      var googleUser = new GoogleUser();
+      googleUser.name = profile.displayName;
+      googleUser.email = profile._json['email'];
+      googleUser.profileLink = profile._json['link'];
+      googleUser.picture = profile._json['picture'];
+      googleUser.gender = profile._json['gender'];
+      googleUser.gID = profile._json['id'];
+
+       googleUser.save(function (err) {
+        if(err) {
+          console.log(err)
+        } else {
+          console.log(googleUser);
+        }
+
+      });
+
+
       return done(null, false);
    
   }
@@ -99,6 +146,11 @@ app.get('auth/google/success', function(req,res){
   res.send('google boom');
 });
 
+app.get('/gUsers', function(req,res){
+  mongoose.model('GoogleUser').find(function(err,googleUsers){
+    res.send(googleUsers);
+  });
+});
 //Facebook routes
 app.get('/auth/facebook', passport.authenticate('facebook'));
 
@@ -111,6 +163,11 @@ app.get('auth/facebook/success', function(req,res){
   res.send('boom');
 });
 
+app.get('/fbUsers', function(req,res){
+  mongoose.model('FacebookUser').find(function(err,facebookUsers){
+    res.send(facebookUsers);
+  });
+});
 
 
 app.get('/logout', function(req, res){
