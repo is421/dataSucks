@@ -8,7 +8,7 @@ var express = require('express'),
     passport = require('passport'),
     LocalStrategy = require('passport-local').Strategy,
     FacebookStrategy = require('passport-facebook').Strategy,
-    passportG = require('passport-google'),
+    GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,
     cookieParser = require('cookie-parser'),
     expressSession = require('express-session');
 
@@ -43,6 +43,7 @@ app.configure('production', function(){
   app.use(express.errorHandler());
 });
 
+//Facebook Auth
 //all paramerters need to change for hari's server
 passport.use(new FacebookStrategy({
     clientID: "1571117689785844",
@@ -52,6 +53,19 @@ passport.use(new FacebookStrategy({
   function(accessToken, refreshToken, profile, done) {
     console.log(profile);
     return done(null,false) 
+  }
+));
+
+//Google Auth
+passport.use(new GoogleStrategy({
+    clientID: "824927381407-ot3cie5fsn29s6ql75d44k7to2ldrt3b.apps.googleusercontent.com",
+    clientSecret: "K325i7e2GABUyjGw5lo7w5zD",
+    callbackURL: "http://stevenbirkner.com:5000/auth/google/callback"
+  },
+  function(token, tokenSecret, profile, done) {
+      console.log(profile);
+      return done(null, false);
+   
   }
 ));
 
@@ -70,20 +84,34 @@ app.get('/', function(req, res){
   res.render('index', { title: 'Data Sucks' });
 });
 
+//Google routes
+app.get('/auth/google', passport.authenticate('google',{ 
+  scope: ['https://www.googleapis.com/auth/userinfo.profile',
+          'https://www.googleapis.com/auth/userinfo.email'] }
+));
+
+app.get('/auth/google/callback', passport.authenticate('google', { 
+  successRedirect: '/auth/google/success',
+  failureRedirect: '/' 
+}));
+
+app.get('auth/google/success', function(req,res){
+  res.send('google boom');
+});
+
+//Facebook routes
 app.get('/auth/facebook', passport.authenticate('facebook'));
 
 app.get('/auth/facebook/callback', passport.authenticate('facebook', {
   successRedirect: '/auth/facebook/success',
-  failureRedirect: '/auth/facebook/fail',
+  failureRedirect: '/',
 }));
 
 app.get('auth/facebook/success', function(req,res){
   res.send('boom');
 });
 
-app.get('auth/facebook/fail', function(req,res){
-  res.send('you done fucked up');
-});
+
 
 app.get('/logout', function(req, res){
   req.logout();
