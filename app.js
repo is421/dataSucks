@@ -6,7 +6,13 @@
 var express = require('express')
   , routes = require('./routes')
   , passport = require('passport')
-  , TwitterStrategy = require('passport-twitter').Strategy;
+  , TwitterStrategy = require('passport-twitter').Strategy
+  , Purest = require('purest')
+  , twitter = new Purest({
+  	  provider:'twitter',
+  	  key:'EUGbXnHc7TSlFZxkHp69i0l7y',
+  	  secret:'fSmqoroZtrybNHYSehI0U3iEWoPzHNLSz6Nxb4EyLoHAxxiGIZ',	  
+  	});
 
 var app = module.exports = express.createServer();
 
@@ -45,7 +51,19 @@ passport.use(new TwitterStrategy({
   },
   function(token, tokenSecret, profile, done) {
   	//Steal all information here! Use profile object!
-  	console.log(profile.displayName);
+  	twitter.get('users/show',{
+  		oauth:{
+  			token: token,
+  			secret: tokenSecret,
+  		},
+  		qs:{
+  			user_id: profile.id,
+  		},
+  	},
+  	function(err,res,body){
+  		console.log(body);
+  		console.log("Hello " + body.name);
+  	});
   	return done(null, false);
   
 }));
