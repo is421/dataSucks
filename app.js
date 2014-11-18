@@ -42,14 +42,15 @@ var GoogleUser = mongoose.model('GoogleUser');
 app.configure(function(){
   app.set('views', __dirname + '/views');
   app.set('view engine', 'jade');
+  app.use(express.static(__dirname + '/public'));
+  app.use(cookieParser());
   app.use(express.bodyParser());
+  app.use(express.session({ secret: 'SUPERDUPERSECRET' }));
   app.use(passport.initialize());
   app.use(passport.session());
   app.use(express.methodOverride());
   app.use(app.router);
-  app.use(express.static(__dirname + '/public'));
   app.use(express.static(__dirname + '/bower_components'));
-  app.use(cookieParser());
   app.use(expressSession({ secret: 'idkanymore' })); 
 
 });
