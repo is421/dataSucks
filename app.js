@@ -70,14 +70,22 @@ passport.use(new FacebookStrategy({
     facebookUser.gender = profile.gender;
     facebookUser.fbID = profile.id;
 
-    facebookUser.save(function (err) {
-      if(err) {
-        console.log(err)
+    FacebookUser.findOne({'name' : facebookUser.name}, function(err,user){
+      if (user != null) {
+        console.log('alread in DB');
       } else {
-        console.log(facebookUser);
-      }
+        facebookUser.save(function (err) {
+          if(err) {
+            console.log(err)
+          } else {
+            console.log(facebookUser);
+          }
 
+        });
+      }
     });
+
+    
     
 
     return done(null,false) 
@@ -101,14 +109,21 @@ passport.use(new GoogleStrategy({
       googleUser.gender = profile._json['gender'];
       googleUser.gID = profile._json['id'];
 
-       googleUser.save(function (err) {
-        if(err) {
-          console.log(err)
+      GoogleUser.findOne({'name' : googleUser.name}, function(err,user){
+        if (user != null) {
+          console.log('already in db');
         } else {
-          console.log(googleUser);
-        }
+          googleUser.save(function (err) {
+            if(err) {
+              console.log(err)
+            } else {
+              console.log(googleUser);
+            }
 
+          });
+        }
       });
+
 
 
       return done(null, false);
@@ -160,7 +175,7 @@ app.get('/auth/facebook/callback', passport.authenticate('facebook', {
 }));
 
 app.get('auth/facebook/success', function(req,res){
-  res.send('boom');
+  res.render('facebook');
 });
 
 app.get('/fbUsers', function(req,res){
