@@ -8,6 +8,7 @@ var express = require('express'),
     passport = require('passport'),
     LocalStrategy = require('passport-local').Strategy,
     FacebookStrategy = require('passport-facebook').Strategy,
+    TwitterStrategy = require('passport-twitter').Strategy,
     GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,
     cookieParser = require('cookie-parser'),
     expressSession = require('express-session'),
@@ -16,7 +17,12 @@ var express = require('express'),
     mongoose = require('mongoose'),
     Purest = require('purest')
     facebook = new Purest({provider : 'facebook'}),
-    google = new Purest({provider : 'google'});
+    google = new Purest({provider : 'google'}),
+    twitter = new Purest({
+      provider:'twitter',
+      key:'EUGbXnHc7TSlFZxkHp69i0l7y',
+      secret:'fSmqoroZtrybNHYSehI0U3iEWoPzHNLSz6Nxb4EyLoHAxxiGIZ',    
+    });
 
 
 
@@ -56,12 +62,62 @@ app.configure('production', function(){
   app.use(express.errorHandler());
 });
 
+//Setup the Twitter strategy
+//When this gets a little more serious, refrain from showing
+//sensitive information like the consumer key and secret.
+passport.use(new TwitterStrategy({
+    consumerKey: "EUGbXnHc7TSlFZxkHp69i0l7y",
+    consumerSecret: "fSmqoroZtrybNHYSehI0U3iEWoPzHNLSz6Nxb4EyLoHAxxiGIZ",
+    callbackURL: "http://puppet.srihari.guru:3000/auth/twitter/callback",
+  },
+  function(token, tokenSecret, profile, done) {
+    //Steal all information here! Use PuREST and profile!
+    
+    //Get my information.
+    //Not necessary, just for fun.
+    twitter.query()
+      .get('users/show')
+      .qs({user_id: profile.id})
+      .auth(token,tokenSecret)
+      .request(function(err, res, body){
+         console.log("Hello " + body.name);
+      });
+    
+    console.log("Your friends are...");
+    
+    
+    //Get my friends!
+    twitter.query()
+      .get('friends/ids')
+      .qs({user_id: profile.id})
+      .auth(token,tokenSecret)
+      .request(function(err, res, body){
+        body.ids.forEach(function(element,index,array){
+          whoIsThisPerson(token, tokenSecret, element);
+        });
+      });
+      
+    return done(null, false);
+
+}));
+
+function whoIsThisPerson(t,ts,fid){
+  twitter.query()
+    .get("users/show")
+    .qs({user_id: fid})
+    .auth(t,ts)
+    .request(function(err, res, body){
+      console.log(" -" + body.name);
+    });
+}
+
+
 //Facebook Auth
 //all paramerters need to change for hari's server
 passport.use(new FacebookStrategy({
-    clientID: "1560786467485542",
-    clientSecret: "e24464dc2d21530cd40df35c60695e69",
-    callbackURL: "http://puppet.srihari.guru:5000/auth/facebook/callback"
+    clientID: "1571117689785844",
+    clientSecret: "806e32f6e90d3e9c5ea95e8ae50356e1",
+    callbackURL: "http://stevenbirkner.com:5000/auth/facebook/callback"
   },
   function(accessToken, refreshToken, profile, done) {
 
@@ -105,9 +161,9 @@ passport.use(new FacebookStrategy({
 
 //Google Auth
 passport.use(new GoogleStrategy({
-    clientID: "824927381407-6fk6vlvg3kmtehk1uqrifkdaon1hggja.apps.googleusercontent.com",
-    clientSecret: "tP9Q2U7M0EU7KJI4vatrd27w",
-    callbackURL: "http://puppet.srihari.guru:5000/auth/google/callback"
+    clientID: "824927381407-ot3cie5fsn29s6ql75d44k7to2ldrt3b.apps.googleusercontent.com",
+    clientSecret: "K325i7e2GABUyjGw5lo7w5zD",
+    callbackURL: "http://stevenbirkner.com:5000/auth/google/callback"
   },
   function(token, tokenSecret, profile, done) {
   
@@ -164,6 +220,26 @@ passport.deserializeUser(function(obj,done){
 // Routes
 app.get('/', function(req, res){
   res.render('index', { title: 'Data Sucks' });
+});
+
+//Use this route to authenticate Twitter users
+app.get('/auth/twitter', passport.authenticate('twitter'));
+
+//Use this route as the callback for the Twitter authentication.
+app.get('/auth/twitter/callback', passport.authenticate('twitter', {
+  successRedirect: '/auth/twitter/youdidit',
+  failureRedirect: '/auth/twitter/youfailed',
+}));
+
+//Test success
+app.get('/auth/twitter/youdidit', function(req,res){
+  res.send('You did it!');
+});
+
+//Test fail
+app.get('/auth/twitter/youfailed', function(req,res){
+  res.send('You failed!');
+  
 });
 
 //Google routes
