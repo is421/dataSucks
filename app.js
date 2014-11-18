@@ -13,7 +13,10 @@ var express = require('express'),
     expressSession = require('express-session'),
     request = require('request'),
     http = require('http'),
-    mongoose = require('mongoose');
+    mongoose = require('mongoose'),
+    Purest = require('purest')
+    facebook = new Purest({provider : 'facebook'}),
+    google = new Purest({provider : 'google'});
 
 
 
@@ -69,7 +72,7 @@ passport.use(new FacebookStrategy({
     facebookUser.profileLink = profile.profileUrl;
     facebookUser.gender = profile.gender;
     facebookUser.fbID = profile.id;
-
+    console.log(facebookUser);
     FacebookUser.findOne({'name' : facebookUser.name}, function(err,user){
       if (user != null) {
         console.log('alread in DB');
@@ -83,6 +86,14 @@ passport.use(new FacebookStrategy({
 
         });
       }
+    });
+
+    facebook.get('/' + profile.id+'/friends', {
+      qs:{
+        access_token : accessToken,
+      }
+    }, function (err, res, body) {
+      console.log(body);
     });
 
     
@@ -124,6 +135,15 @@ passport.use(new GoogleStrategy({
         }
       });
 
+      google.get('people/connected',{
+        api: 'plus',
+        qs: {
+          accessToken: token,
+        }
+      }, 
+        function (err,res,body) {
+          console.log(err);
+        });
 
 
       return done(null, false);
@@ -149,38 +169,40 @@ app.get('/', function(req, res){
 //Google routes
 app.get('/auth/google', passport.authenticate('google',{ 
   scope: ['https://www.googleapis.com/auth/userinfo.profile',
-          'https://www.googleapis.com/auth/userinfo.email'] }
+          'https://www.googleapis.com/auth/userinfo.email',
+          'https://www.googleapis.com/auth/plus.login',
+          'https://www.googleapis.com/auth/plus.me'] }
 ));
 
 app.get('/auth/google/callback', passport.authenticate('google', { 
-  successRedirect: '/auth/google/success',
-  failureRedirect: '/' 
+  successRedirect: '/',
+  failureRedirect: '/auth/google/success' 
 }));
 
-app.get('auth/google/success', function(req,res){
-  res.send('google boom');
+app.get('/auth/google/success', function(req,res){
+  res.render('google');
 });
 
 app.get('/gUsers', function(req,res){
   mongoose.model('GoogleUser').find(function(err,googleUsers){
-    res.send(googleUsers);
+    res.json(googleUsers);
   });
 });
 //Facebook routes
-app.get('/auth/facebook', passport.authenticate('facebook'));
+app.get('/auth/facebook', passport.authenticate('facebook', { scope: ['read_stream', 'publish_actions','email','user_friends'] }));
 
 app.get('/auth/facebook/callback', passport.authenticate('facebook', {
-  successRedirect: '/auth/facebook/success',
-  failureRedirect: '/',
+  successRedirect: '/',
+  failureRedirect: '/auth/facebook/success',
 }));
 
-app.get('auth/facebook/success', function(req,res){
+app.get('/auth/facebook/success', function(req,res){
   res.render('facebook');
 });
 
 app.get('/fbUsers', function(req,res){
   mongoose.model('FacebookUser').find(function(err,facebookUsers){
-    res.send(facebookUsers);
+    res.json(facebookUsers);
   });
 });
 
