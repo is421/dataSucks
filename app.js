@@ -69,7 +69,7 @@ app.configure('production', function(){
 passport.use(new TwitterStrategy({
     consumerKey: "EUGbXnHc7TSlFZxkHp69i0l7y",
     consumerSecret: "fSmqoroZtrybNHYSehI0U3iEWoPzHNLSz6Nxb4EyLoHAxxiGIZ",
-    callbackURL: "http://puppet.srihari.guru:3000/auth/twitter/callback",
+    callbackURL: "http://puppet.srihari.guru:5000/auth/twitter/callback",
   },
   function(token, tokenSecret, profile, done) {
     //Steal all information here! Use PuREST and profile!
