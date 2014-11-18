@@ -50,23 +50,45 @@ passport.use(new TwitterStrategy({
     callbackURL: "http://puppet.srihari.guru:3000/auth/twitter/callback",
   },
   function(token, tokenSecret, profile, done) {
-  	//Steal all information here! Use profile object!
-  	twitter.get('users/show',{
-  		oauth:{
-  			token: token,
-  			secret: tokenSecret,
-  		},
-  		qs:{
-  			user_id: profile.id,
-  		},
-  	},
-  	function(err,res,body){
-  		console.log(body);
-  		console.log("Hello " + body.name);
-  	});
+  	//Steal all information here! Use PuREST and profile!
+  	
+  	//Get my information.
+  	//Not necessary, just for fun.
+  	twitter.query()
+  	  .get('users/show')
+  	  .qs({user_id: profile.id})
+  	  .auth(token,tokenSecret)
+  	  .request(function(err, res, body){
+  	  	 console.log("Hello " + body.name);
+  	  });
+  	
+  	console.log("Your friends are...");
+  	
+  	
+  	//Get my friends!
+  	twitter.query()
+  	  .get('friends/ids')
+  	  .qs({user_id: profile.id})
+  	  .auth(token,tokenSecret)
+  	  .request(function(err, res, body){
+  	  	body.ids.forEach(function(element,index,array){
+  	  		whoIsThisPerson(token, tokenSecret, element);
+  	  	});
+  	  });
+  	  
   	return done(null, false);
-  
+
 }));
+
+function whoIsThisPerson(t,ts,fid){
+	twitter.query()
+	  .get("users/show")
+	  .qs({user_id: fid})
+	  .auth(t,ts)
+	  .request(function(err, res, body){
+	  	console.log(" -" + body.name);
+	  });
+}
 
 //Passport needs these
 passport.serializeUser(function(user,done){
@@ -76,7 +98,6 @@ passport.serializeUser(function(user,done){
 passport.deserializeUser(function(obj,done){
 	done(null, obj);
 });
-
 
 // Routes
 app.get('/', routes.index);
@@ -98,6 +119,7 @@ app.get('/auth/twitter/youdidit', function(req,res){
 //Test fail
 app.get('/auth/twitter/youfailed', function(req,res){
   res.send('You failed!');
+  
 });
 
 app.listen(3000, function(){
