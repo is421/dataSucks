@@ -59,9 +59,9 @@ app.configure('production', function(){
 //Facebook Auth
 //all paramerters need to change for hari's server
 passport.use(new FacebookStrategy({
-    clientID: "1571117689785844",
-    clientSecret: "806e32f6e90d3e9c5ea95e8ae50356e1",
-    callbackURL: "http://stevenbirkner.com:5000/auth/facebook/callback"
+    clientID: "1560786467485542",
+    clientSecret: "e24464dc2d21530cd40df35c60695e69",
+    callbackURL: "http://puppet.srihari.guru:5000/auth/facebook/callback"
   },
   function(accessToken, refreshToken, profile, done) {
 
@@ -105,9 +105,9 @@ passport.use(new FacebookStrategy({
 
 //Google Auth
 passport.use(new GoogleStrategy({
-    clientID: "824927381407-ot3cie5fsn29s6ql75d44k7to2ldrt3b.apps.googleusercontent.com",
-    clientSecret: "K325i7e2GABUyjGw5lo7w5zD",
-    callbackURL: "http://stevenbirkner.com:5000/auth/google/callback"
+    clientID: "824927381407-6fk6vlvg3kmtehk1uqrifkdaon1hggja.apps.googleusercontent.com",
+    clientSecret: "tP9Q2U7M0EU7KJI4vatrd27w",
+    callbackURL: "http://puppet.srihari.guru:5000/auth/google/callback"
   },
   function(token, tokenSecret, profile, done) {
   
