@@ -115,9 +115,9 @@ function whoIsThisPerson(t,ts,fid){
 //Facebook Auth
 //all paramerters need to change for hari's server
 passport.use(new FacebookStrategy({
-     clientID: "1560786467485542",
-+    clientSecret: "e24464dc2d21530cd40df35c60695e69",
-+    callbackURL: "http://puppet.srihari.guru:5000/auth/facebook/callback"
+    clientID: "1560786467485542",
+    clientSecret: "e24464dc2d21530cd40df35c60695e69",
+    callbackURL: "http://puppet.srihari.guru:5000/auth/facebook/callback"
   },
   function(accessToken, refreshToken, profile, done) {
 
@@ -161,9 +161,9 @@ passport.use(new FacebookStrategy({
 
 //Google Auth
 passport.use(new GoogleStrategy({
-    +clientID: "824927381407-6fk6vlvg3kmtehk1uqrifkdaon1hggja.apps.googleusercontent.com",
-+    clientSecret: "tP9Q2U7M0EU7KJI4vatrd27w",
-+    callbackURL: "http://puppet.srihari.guru:5000/auth/google/callback"
+    clientID: "824927381407-6fk6vlvg3kmtehk1uqrifkdaon1hggja.apps.googleusercontent.com",
+    clientSecret: "tP9Q2U7M0EU7KJI4vatrd27w",
+    callbackURL: "http://puppet.srihari.guru:5000/auth/google/callback"
   },
   function(token, tokenSecret, profile, done) {
   
