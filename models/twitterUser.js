@@ -5,4 +5,6 @@ module.exports = mongoose.model('TwitterUser',{
     screenName: String,
     profileLink: String,
     tID: String,
+    friendIDs: [],
+    friendNames: [],
 });

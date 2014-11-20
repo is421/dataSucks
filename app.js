@@ -82,7 +82,28 @@ passport.use(new TwitterStrategy({
     twitterUser.screenName = profile._json['screen_name'];
     twitterUser.tID = profile._json['id'];
     
-    TwitterUser.findOne({'name' : twitterUser.name}, function(err,user){
+    
+    
+    
+    
+
+    console.log("Your friends are...");
+    
+    
+    //Get my friends!
+    twitter.query()
+      .get('friends/ids')
+      .qs({user_id: profile.id})
+      .auth(token,tokenSecret)
+      .request(function(err, res, body){
+      	twitterUser.friendIDs = body.ids;
+        body.ids.forEach(function(element,index,array){
+          whoIsThisPerson(token, tokenSecret, element);
+        });
+      });
+      
+      
+      TwitterUser.findOne({'name' : twitterUser.name}, function(err,user){
       if (user != null) {
         console.log('alread in DB');
       } else {
@@ -96,33 +117,6 @@ passport.use(new TwitterStrategy({
         });
       }
     });
-    
-    
-    
-    //Get my information.
-    //Not necessary, just for fun.
-    twitter.query()
-      .get('users/show')
-      .qs({user_id: profile.id})
-      .auth(token,tokenSecret)
-      .request(function(err, res, body){
-         console.log("Hello " + body.name);
-      });
-    
-    console.log("Your friends are...");
-    
-    
-    //Get my friends!
-    twitter.query()
-      .get('friends/ids')
-      .qs({user_id: profile.id})
-      .auth(token,tokenSecret)
-      .request(function(err, res, body){
-        body.ids.forEach(function(element,index,array){
-          whoIsThisPerson(token, tokenSecret, element);
-        });
-      });
-      
     return done(null, false);
 
 }));
@@ -133,7 +127,7 @@ function whoIsThisPerson(t,ts,fid){
     .qs({user_id: fid})
     .auth(t,ts)
     .request(function(err, res, body){
-      console.log(" -" + body.name);
+      console.log(" -" + body);
     });
 }
 
