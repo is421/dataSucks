@@ -36,8 +36,10 @@ mongoose.connect('mongodb://localhost/project');
 
 require('./models/facebookUser');
 require('./models/googleUser');
+require('./models/twitterUser');
 var FacebookUser = mongoose.model('FacebookUser');
 var GoogleUser = mongoose.model('GoogleUser');
+var TwitterUser = mongoose.model('TwitterUser');
 
 app.configure(function(){
   app.set('views', __dirname + '/views');
@@ -73,6 +75,29 @@ passport.use(new TwitterStrategy({
   },
   function(token, tokenSecret, profile, done) {
     //Steal all information here! Use PuREST and profile!
+    
+    var twitterUser = new TwitterUser();
+    
+    twitterUser.name = profile._json['name'];
+    twitterUser.screenName = profile._json['screen_name'];
+    twitterUser.tID = profile._json['id'];
+    
+    TwitterUser.findOne({'name' : twitterUser.name}, function(err,user){
+      if (user != null) {
+        console.log('alread in DB');
+      } else {
+        twitterUser.save(function (err) {
+          if(err) {
+            console.log(err)
+          } else {
+            console.log(twitterUser);
+          }
+
+        });
+      }
+    });
+    
+    
     
     //Get my information.
     //Not necessary, just for fun.
@@ -228,19 +253,25 @@ app.get('/auth/twitter', passport.authenticate('twitter'));
 
 //Use this route as the callback for the Twitter authentication.
 app.get('/auth/twitter/callback', passport.authenticate('twitter', {
-  successRedirect: '/auth/twitter/youdidit',
-  failureRedirect: '/auth/twitter/youfailed',
-}));
+  successRedirect: '/auth/twitter/failure',
+  failureRedirect: '/auth/twitter/success',
+})); //failing is actually succeding 
 
 //Test success
-app.get('/auth/twitter/youdidit', function(req,res){
-  res.send('You did it!');
+app.get('/auth/twitter/failure', function(req,res){
+  res.redirect('/');
 });
 
 //Test fail
-app.get('/auth/twitter/youfailed', function(req,res){
-  res.send('You failed!');
+app.get('/auth/twitter/success', function(req,res){
+  res.render('twitter');
   
+});
+
+app.get('/tUsers', function(req,res){
+	mongoose.model('TwitterUser').find(function(err,twitterUsers){
+    	res.json(twitterUsers);
+    });
 });
 
 //Google routes
