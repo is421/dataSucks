@@ -164,7 +164,7 @@ passport.use(new FacebookStrategy({
       });
       FacebookUser.findOne({'name' : facebookUser.name}, function(err,user){
       if (user != null) {
-     
+     	console.log(facebookUser);
         console.log('already in DB');
         
       } else {
@@ -308,6 +308,7 @@ app.get('/auth/facebook/callback', passport.authenticate('facebook', {
 }));
 
 app.get('/auth/facebook/success', function(req,res){
+  console.log(req.session);
   res.render('facebook');
 });
 
@@ -318,7 +319,11 @@ app.get('/fbUsers', function(req,res){
 });
 
 app.get('/fbFriends', function(req,res){
-	console.log(req.session.user);
+	console.log(req.session);
+	FacebookUser.findOne({'fbID' : '10204974940035158'}, function(err,user){
+		res.send(user.friends);
+	});
+
 });
 
 
