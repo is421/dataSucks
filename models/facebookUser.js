@@ -5,4 +5,8 @@ module.exports = mongoose.model('FacebookUser',{
     profileLink: String,
     gender: String,
     fbID: String,
+    friends: [{
+    	'name': String,
+    	'id': String
+    }],
 });

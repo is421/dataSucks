@@ -97,6 +97,7 @@ passport.use(new TwitterStrategy({
       .auth(token,tokenSecret)
       .request(function(err, res, body){
       	twitterUser.friendIDs = body.ids;
+      	console.log(body);
         body.ids.forEach(function(element,index,array){
           whoIsThisPerson(token, tokenSecret, element);
         });
@@ -127,7 +128,7 @@ function whoIsThisPerson(t,ts,fid){
     .qs({user_id: fid})
     .auth(t,ts)
     .request(function(err, res, body){
-      console.log(" -" + body);
+      //console.log(" -" + body.name);
     });
 }
 
@@ -148,11 +149,26 @@ passport.use(new FacebookStrategy({
     facebookUser.profileLink = profile.profileUrl;
     facebookUser.gender = profile.gender;
     facebookUser.fbID = profile.id;
-    console.log(facebookUser);
-    FacebookUser.findOne({'name' : facebookUser.name}, function(err,user){
+
+    
+    facebook.get('/' + profile.id+'/friends', {
+      qs:{
+        access_token : accessToken,
+      }
+    }, function (err, res, body) {
+      body.data.forEach(function(element,index,array){
+      	var temp = {name : element['name'], id : element['id']};
+      	console.log(temp);
+      	facebookUser.friends.push(temp);
+      	
+      });
+      FacebookUser.findOne({'name' : facebookUser.name}, function(err,user){
       if (user != null) {
-        console.log('alread in DB');
+     
+        console.log('already in DB');
+        
       } else {
+      	
         facebookUser.save(function (err) {
           if(err) {
             console.log(err)
@@ -163,17 +179,10 @@ passport.use(new FacebookStrategy({
         });
       }
     });
-
-    facebook.get('/' + profile.id+'/friends', {
-      qs:{
-        access_token : accessToken,
-      }
-    }, function (err, res, body) {
-      console.log(body);
     });
-
     
-    
+   
+  
 
     return done(null,false) 
   }
@@ -306,6 +315,10 @@ app.get('/fbUsers', function(req,res){
   mongoose.model('FacebookUser').find(function(err,facebookUsers){
     res.json(facebookUsers);
   });
+});
+
+app.get('/fbFriends', function(req,res){
+	console.log(req.session.user);
 });
 
 
