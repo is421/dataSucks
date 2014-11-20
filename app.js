@@ -112,7 +112,6 @@ passport.use(new TwitterStrategy({
             console.log(err)
           } else {
             console.log(twitterUser);
-            //comment
           }
 
         });
