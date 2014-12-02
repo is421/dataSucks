@@ -128,7 +128,7 @@ function whoIsThisPerson(t,ts,fid){
     .qs({user_id: fid})
     .auth(t,ts)
     .request(function(err, res, body){
-      //console.log(" -" + body.name);
+      console.log(" -" + body.name);
     });
 }
 
