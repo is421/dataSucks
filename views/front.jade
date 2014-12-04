@@ -1,0 +1,289 @@
+doctype html(lang='en')
+head
+    meta(charset='utf-8')
+    |     
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    |     
+    meta(name='description', content='Bootbusiness | Short description about company')
+    |     
+    meta(name='author', content='Your name')
+    |     
+    title DataSucker
+    // Bootstrap
+    link(href='css/bootstrap.min.css', rel='stylesheet')
+    // Bootstrap responsive
+    link(href='css/bootstrap-responsive.min.css', rel='stylesheet')
+    // Font awesome - iconic font with IE7 support
+    link(href='css/font-awesome.css', rel='stylesheet')
+    |     
+    link(href='css/font-awesome-ie7.css', rel='stylesheet')
+    // Bootbusiness theme
+    link(href='css/boot-business.css', rel='stylesheet')
+  |   
+body
+    // Start: HEADER
+    header
+      // Start: Navigation wrapper
+      .navbar.navbar-fixed-top
+        .navbar-inner
+          .container
+            a.brand.brand-bootbus(href='index.html') DataSucker
+            // Below button used for responsive navigation
+            button.btn.btn-navbar(type='button', data-toggle='collapse', data-target='.nav-collapse')
+              span.icon-bar
+              |               
+              span.icon-bar
+              |               
+              span.icon-bar
+            // Start: Primary navigation
+            .nav-collapse.collapse
+              ul.nav.pull-right
+                li.dropdown
+                  a.dropdown-toggle(href='#', data-toggle='dropdown')
+                    | Services
+                    b.caret
+                  |                   
+                  ul.dropdown-menu
+                    li.nav-header SERVICES
+                    |                     
+                    li
+                      a(href='service.html') Service1
+                    |                     
+                    li
+                      a(href='service.html') Service2
+                    |                     
+                    li
+                      a(href='service.html') Service3
+                    |                     
+                    li
+                      a(href='all_services.html') All services
+                |                 
+                li.dropdown
+                  a.dropdown-toggle(href='#', data-toggle='dropdown')
+                    | About
+                    b.caret
+                  |                   
+                  ul.dropdown-menu
+                    li
+                      a(href='our_works.html') Our works
+                    |                     
+                    li
+                      a(href='patnerships.html') Parnerships
+                    |                     
+                    li
+                      a(href='leadership.html') Leadership
+                    |                     
+                    li
+                      a(href='news.html') News
+                    |                     
+                    li
+                      a(href='events.html') Events
+                    |                     
+                    li
+                      a(href='blog.html') Blog
+                |                 
+                li
+                  a(href='faq.html') FAQ
+                |                 
+                li
+                  a(href='contact_us.html') Contact us
+                |                 
+                li
+                  a(href='signup.html') Sign up
+                |                 
+                li
+                  a.active-link(href='signin.html') Sign in
+      // End: Navigation wrapper
+    // End: HEADER
+    // Start: MAIN CONTENT
+    .content
+      .container
+        .page-header
+          h1 Signin to DataSucker
+        |         
+        .row
+          .span6.offset3
+            h4.widget-header
+              i.icon-lock
+              |  Signin to DataSucker
+            |             
+            .widget-body
+              .center-align
+                form(action='/auth/local',method='post').form-horizontal.form-signin-signup
+                  input(type='text', name='username', placeholder='Email')
+                  |                   
+                  input(type='password', name='password', placeholder='Password')
+                  |                   
+                  .remember-me
+                    .pull-left
+                      label.checkbox
+                        input(type='checkbox')
+                        |  Remember me
+                    |                     
+                    .pull-right
+                      a(href='#') Forgot password?
+                    |                     
+                    .clearfix
+                  |                   
+                  input.btn.btn-primary.btn-large(type='submit', value='Signin')
+                |                 
+                h4
+                  i.icon-question-sign
+                  |  Don&apos;t have an account?
+                |                 
+                a.btn.btn-large.bottom-space(href='signup.html') Signup
+                |                 
+                h4
+                  i.icon-thumbs-up
+                  |  Sign in with third party account
+                |                 
+                ul.signin-with-list
+                  li
+                    a.btn-twitter
+                      i.icon-twitter.icon-large
+                      |                       Signin with Twitter
+                  |                   
+                  li
+                    a.btn-facebook
+                      i.icon-facebook.icon-large
+                      |                       Signin with Facebook
+                  |                   
+                  li
+                    a.btn-google
+                      i.icon-google-plus.icon-large
+                      |                       Signin with Google
+                  |                   
+                  li
+                    a.btn-github
+                      i.icon-github.icon-large
+                      |                       Signin with Github
+    // End: MAIN CONTENT
+    // Start: FOOTER
+    footer
+      .container
+        .row
+          .span2
+            h4
+              i.icon-cogs.icon-white
+              |  Services
+            |             
+            nav
+              ul.quick-links
+                li
+                  a(href='service.html') Service1
+                |                 
+                li
+                  a(href='service.html') Service2
+                |                 
+                li
+                  a(href='service.html') Service3
+                |                 
+                li
+                  a(href='all_services.html') All services
+          |           
+          .span2
+            h4
+              i.icon-beaker.icon-white
+              |  About
+            |             
+            nav
+              ul.quick-links
+                li
+                  a(href='our_works.html') Our works
+                |                 
+                li
+                  a(href='patnerships.html') Patnerships
+                |                 
+                li
+                  a(href='leadership.html') Leadership
+                |                 
+                li
+                  a(href='news.html') News
+                |                 
+                li
+                  a(href='events.html') Events
+                |                 
+                li
+                  a(href='blog.html') Blog
+                |               
+                ul
+          |           
+          .span2
+            h4
+              i.icon-thumbs-up.icon-white
+              |  Support
+            |             
+            nav
+              ul.quick-links
+                li
+                  a(href='faq.html') FAQ
+                |                 
+                li
+                  a(href='contact_us.html') Contact us
+            |             
+            h4
+              i.icon-legal.icon-white
+              |  Legal
+            |             
+            nav
+              ul.quick-links
+                li
+                  a(href='#') License
+                |                 
+                li
+                  a(href='#') Terms of Use
+                |                 
+                li
+                  a(href='#') Privacy Policy
+                |                 
+                li
+                  a(href='#') Security
+          |           
+          .span3
+            h4 Get in touch
+            |             
+            .social-icons-row
+              a(href='#')
+                i.icon-twitter
+              |               
+              a(href='#')
+                i.icon-facebook
+              |               
+              a(href='#')
+                i.icon-linkedin
+            |             
+            .social-icons-row
+              a(href='#')
+                i.icon-google-plus
+              |               
+              |               
+              a(href='#')
+                i.icon-github
+              |               
+              a(href='mailto:soundar.rathinasamy@gmail.com')
+                i.icon-envelope
+            |             
+            .social-icons-row
+              i.icon-phone.icon-large.phone-number
+              |  1234566789
+          |       
+          |           
+          .span3
+            h4 Get updated by email
+            |             
+            form
+              input(type='text', name='email', placeholder='Email address')
+              |               
+              input.btn.btn-primary(type='submit', value='Subscribe')
+      |       
+      hr.footer-divider
+      |       
+      .container
+        p
+          | &copy; DataSucker, Inc. All Rights Reserved.
+    // End: FOOTER
+    script(type='text/javascript', src='js/jquery.min.js')
+    |     
+    script(type='text/javascript', src='js/bootstrap.min.js')
+    |     
+    script(type='text/javascript', src='js/boot-business.js')

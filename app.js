@@ -15,6 +15,7 @@ var express = require('express'),
     request = require('request'),
     http = require('http'),
     mongoose = require('mongoose'),
+    Schema = mongoose.Schema;
     Purest = require('purest')
     facebook = new Purest({provider : 'facebook'}),
     google = new Purest({provider : 'google'}),
@@ -26,13 +27,20 @@ var express = require('express'),
 
 
 
+//Dummy Schema
+var dummySchema = new Schema({
+	username: String,
+	name: String,
+});
 
+//Dummy Model
+var Dummy = mongoose.model('Dummy',dummySchema);
 
 var app = module.exports = express.createServer();
 
 // Configuration
 
-mongoose.connect('mongodb://localhost/project');
+mongoose.connect('mongodb://localhost/jOrtega');
 
 require('./models/facebookUser');
 require('./models/googleUser');
@@ -40,6 +48,7 @@ require('./models/twitterUser');
 var FacebookUser = mongoose.model('FacebookUser');
 var GoogleUser = mongoose.model('GoogleUser');
 var TwitterUser = mongoose.model('TwitterUser');
+
 
 app.configure(function(){
   app.set('views', __dirname + '/views');
@@ -65,6 +74,16 @@ app.configure('production', function(){
   app.use(express.errorHandler());
 });
 
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function callback(){
+	var abc = new Dummy({ username: 'abc123', name: 'Dummy'});
+	abc.save(function (err){
+		if(err) return console.error(err);
+	});
+	console.log("OK");
+});
+
 //Setup the Twitter strategy
 //When this gets a little more serious, refrain from showing
 //sensitive information like the consumer key and secret.
@@ -81,14 +100,8 @@ passport.use(new TwitterStrategy({
     twitterUser.name = profile._json['name'];
     twitterUser.screenName = profile._json['screen_name'];
     twitterUser.tID = profile._json['id'];
-    
-    
-    
-    
-    
 
     console.log("Your friends are...");
-    
     
     //Get my friends!
     twitter.query()
@@ -132,6 +145,20 @@ function whoIsThisPerson(t,ts,fid){
     });
 }
 
+passport.use(new LocalStrategy(
+  function(username, password, done) {
+    User.findOne({ username: username }, function(err, user) {
+      if (err) { return done(err); }
+      if (!user) {
+        return done(null, false, { message: 'Incorrect username.' });
+      }
+      if (!user.validPassword(password)) {
+        return done(null, false, { message: 'Incorrect password.' });
+      }
+      return done(null, user);
+    });
+  }
+));
 
 //Facebook Auth
 //all paramerters need to change for hari's server
@@ -326,6 +353,15 @@ app.get('/fbFriends', function(req,res){
 
 });
 
+app.post('/auth/local',
+  passport.authenticate('local', { successRedirect: '/',
+                                   failureRedirect: '/test',
+                                   failureFlash: true })
+);
+
+app.get('/test', function(req, res){
+	res.render('front.jade');
+});
 
 app.get('/logout', function(req, res){
   req.logout();
