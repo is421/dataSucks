@@ -41,8 +41,17 @@ userSchema.methods.validPassword = function(password){
 	  return false;
 }
 
+var identitySchema = new Schema({
+	name: String,
+	belongsTo: String,
+	Twitter: String,
+	Facebook: String,
+	Gmail: String,
+});
+
 //Dummy Model
 var User = mongoose.model('User',userSchema);
+var Identity = mongoose.model('Identity',identitySchema);
 
 var app = module.exports = express.createServer();
 
@@ -157,7 +166,11 @@ function checkTwitterUser(t,ts,fid,req){
     .qs({user_id: fid})
     .auth(t,ts)
     .request(function(err, res, body){
-      console.log(" -" + body.name);
+      Identity.findOrCreate({belongsTo: req.session.myid}, function(err,iden){
+      	if(err) { return done(err); }
+      	iden.Twitter = body.screen_name;
+      	iden.save();
+      })
     });
     
   //
