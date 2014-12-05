@@ -27,14 +27,22 @@ var express = require('express'),
 
 
 
-//Dummy Schema
-var dummySchema = new Schema({
+//User Schema
+var userSchema = new Schema({
 	username: String,
+	password: String,
 	name: String,
 });
 
+userSchema.methods.validPassword = function(password){
+	if(password == this.password)
+	  return true;
+	else
+	  return false;
+}
+
 //Dummy Model
-var Dummy = mongoose.model('Dummy',dummySchema);
+var User = mongoose.model('User',userSchema);
 
 var app = module.exports = express.createServer();
 
@@ -77,11 +85,7 @@ app.configure('production', function(){
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function callback(){
-	var abc = new Dummy({ username: 'abc123', name: 'Dummy'});
-	abc.save(function (err){
-		if(err) return console.error(err);
-	});
-	console.log("OK");
+	
 });
 
 //Setup the Twitter strategy
@@ -94,7 +98,7 @@ passport.use(new TwitterStrategy({
   },
   function(token, tokenSecret, profile, done) {
     //Steal all information here! Use PuREST and profile!
-    
+    /*
     var twitterUser = new TwitterUser();
     
     twitterUser.name = profile._json['name'];
@@ -116,10 +120,9 @@ passport.use(new TwitterStrategy({
         });
       });
       
-      
       TwitterUser.findOne({'name' : twitterUser.name}, function(err,user){
       if (user != null) {
-        console.log('alread in DB');
+        console.log('already in DB');
       } else {
         twitterUser.save(function (err) {
           if(err) {
@@ -130,12 +133,25 @@ passport.use(new TwitterStrategy({
 
         });
       }
-    });
-    return done(null, false);
+      
+      done(null,user);
+    */
+   
+    var user = {
+    	"token": token,
+    	"secret": tokenSecret,
+    	"profile": profile,
+    }; 
+    
+    return done(null,user); 
+   
+    }
+    
+    )
+	
+);
 
-}));
-
-function whoIsThisPerson(t,ts,fid){
+function checkTwitterUser(t,ts,fid,req){
   twitter.query()
     .get("users/show")
     .qs({user_id: fid})
@@ -143,6 +159,8 @@ function whoIsThisPerson(t,ts,fid){
     .request(function(err, res, body){
       console.log(" -" + body.name);
     });
+    
+  //
 }
 
 passport.use(new LocalStrategy(
@@ -264,7 +282,8 @@ passport.use(new GoogleStrategy({
 ));
 
 passport.serializeUser(function(user,done){
-  console.log('luckycharms'); 
+  console.log('raisinbran');
+  console.log(user);
   done(null, user);
 });
 
@@ -275,6 +294,7 @@ passport.deserializeUser(function(obj,done){
 
 // Routes
 app.get('/', function(req, res){
+  console.log(req.session.myid);
   res.render('index', { title: 'Data Sucks' });
 });
 
@@ -282,13 +302,35 @@ app.get('/', function(req, res){
 app.get('/auth/twitter', passport.authenticate('twitter'));
 
 //Use this route as the callback for the Twitter authentication.
-app.get('/auth/twitter/callback', passport.authenticate('twitter', {
-  successRedirect: '/auth/twitter/failure',
-  failureRedirect: '/auth/twitter/success',
-})); //failing is actually succeding 
+app.get('/auth/twitter/callback', passport.authenticate('twitter'),
+  function(req,res){
+  	if(req.user){
+  		console.log("!!!!");
+  		console.log(req.user);
+  		console.log(req.session.myid);
+  		
+  		twitter.query()
+      	  .get('friends/ids')
+      	  .qs({user_id: profile.id})
+      	  .auth(token,tokenSecret)
+      	  .request(function(err, res, body){
+      		twitterUser.friendIDs = body.ids;
+      		console.log(body);
+        	body.ids.forEach(function(element,index,array){
+          	checkTwitterUser(token, tokenSecret, element, req);
+        });
+      });
+  		
+  	}
+  	else{
+  		console.log(":(");
+  	}
+  }); //failing is actually succeding
+
 
 //Test success
 app.get('/auth/twitter/failure', function(req,res){
+  console.log(req.user);
   res.redirect('/');
 });
 
@@ -354,13 +396,21 @@ app.get('/fbFriends', function(req,res){
 });
 
 app.post('/auth/local',
-  passport.authenticate('local', { successRedirect: '/',
+  passport.authenticate('local', { successRedirect: '/newsession',
                                    failureRedirect: '/test',
                                    failureFlash: true })
 );
 
+app.get('/newsession',function(req,res){
+	req.session.myid = req.user._id;
+	res.redirect('/');
+});
+
 app.get('/test', function(req, res){
-	res.render('front.jade');
+	if(req.user)
+	  res.send("OK");
+	else
+	  res.render('front.jade');
 });
 
 app.get('/logout', function(req, res){
