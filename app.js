@@ -150,6 +150,8 @@ passport.use(new TwitterStrategy({
     	"token": token,
     	"secret": tokenSecret,
     	"profile": profile,
+	"token": token,
+	"tokenSecret": tokenSecret,
     }; 
     
     return done(null,user); 
@@ -166,14 +168,29 @@ function checkTwitterUser(t,ts,fid,req){
     .qs({user_id: fid})
     .auth(t,ts)
     .request(function(err, res, body){
-      Identity.findOrCreate({belongsTo: req.session.myid}, function(err,iden){
-      	if(err) { return done(err); }
-      	iden.Twitter = body.screen_name;
-      	iden.save();
-      })
-    });
-    
-  //
+
+	var found = false;
+
+	Identity.findOne({belongsTo: req.session.myid, Twitter: body.screen_name},function(err,iden){
+	  if(iden){
+	    iden.Twitter = body.screen_name;
+	    iden.save();
+	    found = true;
+	  }
+	});
+
+	if(!found){
+	  Identity.create({
+	    name: body.name,
+	    belongsTo: req.session.myid,
+	    Twitter: body.screen_name,
+	}, function(err, newTwitter){
+		if(err)
+		  console.log("Error saving Twitter identity");
+	   });
+    }
+	
+  });
 }
 
 passport.use(new LocalStrategy(
@@ -324,13 +341,13 @@ app.get('/auth/twitter/callback', passport.authenticate('twitter'),
   		
   		twitter.query()
       	  .get('friends/ids')
-      	  .qs({user_id: profile.id})
-      	  .auth(token,tokenSecret)
+      	  .qs({user_id: req.user.id})
+      	  .auth(req.user.token,req.user.tokenSecret)
       	  .request(function(err, res, body){
-      		twitterUser.friendIDs = body.ids;
+      		//twitterUser.friendIDs = body.ids;
       		console.log(body);
         	body.ids.forEach(function(element,index,array){
-          	checkTwitterUser(token, tokenSecret, element, req);
+          	checkTwitterUser(req.user.token, req.user.tokenSecret, element, req);
         });
       });
   		
