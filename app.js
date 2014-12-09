@@ -213,11 +213,11 @@ passport.use(new LocalStrategy(
 passport.use(new FacebookStrategy({
     clientID: "1560786467485542",
     clientSecret: "e24464dc2d21530cd40df35c60695e69",
-    callbackURL: "http://puppet.srihari.guru:5000/auth/facebook/callback"
+    callbackURL: "http://puppet.srihari.guru/auth/facebook/callback"
   },
   function(accessToken, refreshToken, profile, done) {
 
-
+	/*
     var facebookUser = new FacebookUser();
 
     facebookUser.name = profile.name['givenName'] + ' ' + profile.name['familyName'];
@@ -259,7 +259,18 @@ passport.use(new FacebookStrategy({
    
   
 
-    return done(null,false) 
+    return done(null,false)
+    */
+   
+    var user = {
+    	"token": accessToken,
+    	//"secret": tokenSecret,
+    	"profile": profile,
+	//"token": token,
+	//"tokenSecret": tokenSecret,
+    }; 
+    
+    return done(null,user);  
   }
 ));
 
@@ -267,7 +278,7 @@ passport.use(new FacebookStrategy({
 passport.use(new GoogleStrategy({
     clientID: "824927381407-6fk6vlvg3kmtehk1uqrifkdaon1hggja.apps.googleusercontent.com",
     clientSecret: "tP9Q2U7M0EU7KJI4vatrd27w",
-    callbackURL: "http://puppet.srihari.guru:5000/auth/google/callback"
+    callbackURL: "http://puppet.srihari.guru/auth/google/callback"
   },
   function(token, tokenSecret, profile, done) {
   
@@ -401,10 +412,80 @@ app.get('/gUsers', function(req,res){
 //Facebook routes
 app.get('/auth/facebook', passport.authenticate('facebook', { scope: ['read_stream', 'publish_actions','email','user_friends'] }));
 
-app.get('/auth/facebook/callback', passport.authenticate('facebook', {
-  successRedirect: '/',
-  failureRedirect: '/auth/facebook/success',
-}));
+
+app.get('/auth/facebook/callback', passport.authenticate('facebook'),function(req,res){
+
+	if(req.user){
+  		console.log("!!!!");
+  		console.log(req.user);
+  		console.log(req.session.myid);
+  		/*
+  		facebook.get('/' + profile.id+'/friends', {
+      qs:{
+        access_token : accessToken,
+      }
+    }, function (err, res, body) {
+      body.data.forEach(function(element,index,array){
+      	var temp = {name : element['name'], id : element['id']};
+      	console.log(temp);
+      	facebookUser.friends.push(temp);
+      	
+      });
+      */
+  		
+  		facebook.query()
+  		  .get('/' + req.user.profile.id + '/friends')
+  		  .auth(req.user.token)
+  		  .request(function(err,res,body){
+  		  	
+  		  	body.data.forEach(function(element,index,array){
+  		  		console.log(element['name']);
+  		  		
+  		  		var found = false;
+
+				Identity.findOne({belongsTo: req.session.myid, Facebook: element['name']},function(err,iden){
+				  if(iden){
+				    iden.Facebook = element['name'];
+				    iden.save();
+				    found = true;
+				  }
+				});
+			
+				if(!found){
+				  Identity.create({
+				    name: element['name'],
+				    belongsTo: req.session.myid,
+				    Facebook: element['name'],
+				}, function(err, newFacebook){
+					if(err)
+					  console.log("Error saving Facebook identity");
+				   });
+			    }
+  		  		
+  		  	});
+  		  	
+  		  });
+  		/*
+  		twitter.query()
+      	  .get('friends/ids')
+      	  .qs({user_id: req.user.id})
+      	  .auth(req.user.token,req.user.tokenSecret)
+      	  .request(function(err, res, body){
+      		//twitterUser.friendIDs = body.ids;
+      		console.log(body);
+        	body.ids.forEach(function(element,index,array){
+          	checkTwitterUser(req.user.token, req.user.tokenSecret, element, req);
+        });
+        
+      }); */
+  		
+  	}
+  	else{
+  		console.log(":(");
+  	}
+});
+
+
 
 app.get('/auth/facebook/success', function(req,res){
   console.log(req.session);
@@ -448,6 +529,6 @@ app.get('/logout', function(req, res){
   res.redirect('/');
 });
 
-app.listen(5000, function(){
+app.listen(80, function(){
   console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
 });
