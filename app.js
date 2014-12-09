@@ -378,20 +378,25 @@ app.post('/imapsuck',function(req,res){
      		msg.on('body', function(stream, info) {
         	var buffer = '';
         	stream.on('data', function(chunk) {
-        	console.log(chunk);
           	buffer += chunk.toString('utf8');
         });
         stream.once('end', function() {
           //console.log(prefix + 'Parsed header: %s', inspect(Imap.parseHeader(buffer)));
           var temp = inspect(Imap.parseHeader(buffer));
-          console.log(temp);
+          //console.log(buffer);
+		  buffer = buffer.substring(buffer.indexOf(':')+1,buffer.indexOf(' <'));
+		  var em = temp.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi);
+          //console.log(em[0], buffer);
+          var emailUser = [em[0],buffer]; //email, name
+          console.log(emailUser);
+          
         });
       });
       msg.once('attributes', function(attrs) {
         //console.log(prefix + 'Attributes: %s', inspect(attrs, false, 8));
       });
       msg.once('end', function() {
-        console.log(prefix + 'Finished');
+        //console.log(prefix + 'Finished');
       });
     });
     f.once('error', function(err) {
