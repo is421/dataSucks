@@ -10,6 +10,8 @@ var express = require('express'),
     FacebookStrategy = require('passport-facebook').Strategy,
     TwitterStrategy = require('passport-twitter').Strategy,
     GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,
+    YahooStrategy = require('passport-yahoo-oauth').Strategy,
+    WindowsLiveStrategy = require('passport-windowslive').Strategy,
     cookieParser = require('cookie-parser'),
     expressSession = require('express-session'),
     request = require('request'),
@@ -23,7 +25,9 @@ var express = require('express'),
       provider:'twitter',
       key:'EUGbXnHc7TSlFZxkHp69i0l7y',
       secret:'fSmqoroZtrybNHYSehI0U3iEWoPzHNLSz6Nxb4EyLoHAxxiGIZ',    
-    });
+    }),
+    Imap = require('imap'),
+    inspect = require('util').inspect;
 
 
 
@@ -60,7 +64,7 @@ var app = module.exports = express.createServer();
 
 // Configuration
 
-mongoose.connect('mongodb://localhost/jOrtega');
+mongoose.connect('mongodb://localhost/project');
 
 require('./models/facebookUser');
 require('./models/googleUser');
@@ -99,6 +103,33 @@ db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function callback(){
 	
 });
+//set up windows live
+passport.use(new WindowsLiveStrategy({
+    clientID: '000000004C130C10',
+    clientSecret: 'GBikyqhEjN0R9D5VYahITL4R5hcP1MEx',
+    callbackURL: "http://puppet.srihari.guru/auth/windowslive/callback?"
+  },
+  function(accessToken, refreshToken, profile, done) {
+    console.log(profile);
+    return done(null,false);
+  }
+));
+
+
+//set up yahoo strategy
+passport.use(new YahooStrategy({
+    consumerKey: 'dj0yJmk9ZTFRUnBycUQ0aEtNJmQ9WVdrOVNuZGljRlZKTXpJbWNHbzlNQS0tJnM9Y29uc3VtZXJzZWNyZXQmeD03ZA--',
+    consumerSecret: 'aa77244f39a74a0a068049df82f1626c643c55d4',
+    callbackURL: "http://puppet.srihari.guru/auth/yahoo/callback"
+  },
+  function(token, tokenSecret, profile, done) {
+    console.log(profile);
+    return done(null,false);
+  }
+));
+
+
+
 
 //Setup the Twitter strategy
 //When this gets a little more serious, refrain from showing
@@ -329,9 +360,10 @@ passport.use(new GoogleStrategy({
       googleUser.picture = profile._json['picture'];
       googleUser.gender = profile._json['gender'];
       googleUser.gID = profile._json['id'];
-
+	console.log(googleUser);
       GoogleUser.findOne({'name' : googleUser.name}, function(err,user){
         if (user != null) {
+        
           console.log('already in db');
         } else {
           googleUser.save(function (err) {
@@ -378,6 +410,119 @@ app.get('/', function(req, res){
   res.render('index', { title: 'Data Sucks' });
 });
 
+
+//test imap
+
+app.get('/imap',function(req,res){
+	res.render('imap');
+});
+
+app.post('/imapsuck',function(req,res){
+
+	
+	var imap = new Imap({
+	  user: req.body.username,
+	  password: req.body.password,	
+  	  host: 'imap.gmail.com',
+      port: 993,
+      tls: true
+    });
+    
+    function openInbox(cb) {
+  		imap.openBox('INBOX', true, cb);
+	}
+	
+	imap.once('ready', function() {
+  		openInbox(function(err, box) {
+    		if (err) throw err;
+    		var f = imap.seq.fetch('1:10000', {
+      			bodies: 'HEADER.FIELDS (FROM)',
+      			struct: true
+    	});
+    	f.on('message', function(msg, seqno) {
+      		//console.log('Message #%d', seqno);
+      		var prefix = '(#' + seqno + ') ';
+     		msg.on('body', function(stream, info) {
+        	var buffer = '';
+        	stream.on('data', function(chunk) {
+          	buffer += chunk.toString('utf8');
+        });
+        stream.once('end', function() {
+          //console.log(prefix + 'Parsed header: %s', inspect(Imap.parseHeader(buffer)));
+          var temp = inspect(Imap.parseHeader(buffer));
+          //console.log(buffer);
+		  buffer = buffer.substring(buffer.indexOf(':')+1,buffer.indexOf(' <'));
+		  var em = temp.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi);
+          //console.log(em[0], buffer);
+          var emailUser = [em[0],buffer]; //email, name
+          
+          console.log(emailUser);
+          
+        });
+      });
+      msg.once('attributes', function(attrs) {
+        //console.log(prefix + 'Attributes: %s', inspect(attrs, false, 8));
+      });
+      msg.once('end', function() {
+        //console.log(prefix + 'Finished');
+      });
+    });
+    f.once('error', function(err) {
+      console.log('Fetch error: ' + err);
+    });
+    f.once('end', function() {
+      console.log('Done fetching all messages!');
+      imap.end();
+    });
+  });
+});
+
+imap.once('error', function(err) {
+  console.log(err);
+});
+
+imap.once('end', function() {
+  console.log('Connection ended');
+});
+
+imap.connect();
+});
+//microsoft
+app.get('/auth/windowslive',passport.authenticate('windowslive'));
+
+app.get('/auth/yahoo/callback',passport.authenticate('yahoo', { failureRedirect: '/login' }),
+  function(req, res) {
+    // Successful authentication, redirect home.
+    res.redirect('/');
+  });
+
+app.get('/auth/windowslive/callback', passport.authenticate('windowslive', { 
+  successRedirect: '/',
+  failureRedirect: '/auth/windowslive/success' 
+}));
+
+app.get('/auth/windowslive/success', function(req,res){
+  res.send('woooo');
+});
+
+//yahoo routes 
+
+app.get('/YjfAAjxCJBtnSRIQbZzAWlwPRLx.IQbuk9lgxqw5DQ--.html', function(req,res) {
+	res.send('yo');
+});
+
+
+app.get('/auth/yahoo',passport.authenticate('yahoo'));
+
+
+app.get('/auth/yahoo/callback', passport.authenticate('yahoo', { 
+  successRedirect: '/auth/yahoo/success',
+  failureRedirect: '/' 
+}));
+
+app.get('/auth/yahoo/success', function(req,res){
+  console.log('success');
+});
 //Use this route to authenticate Twitter users
 app.get('/auth/twitter', passport.authenticate('twitter'));
 
