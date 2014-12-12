@@ -43,6 +43,9 @@ userSchema.methods.validPassword = function(password){
 
 var identitySchema = new Schema({
 	name: String,
+	firstName: String,
+	lastName: String,
+	email: String,
 	belongsTo: String,
 	Twitter: String,
 	Facebook: String,
@@ -103,7 +106,7 @@ db.once('open', function callback(){
 passport.use(new TwitterStrategy({
     consumerKey: "EUGbXnHc7TSlFZxkHp69i0l7y",
     consumerSecret: "fSmqoroZtrybNHYSehI0U3iEWoPzHNLSz6Nxb4EyLoHAxxiGIZ",
-    callbackURL: "http://puppet.srihari.guru:5000/auth/twitter/callback",
+    callbackURL: "http://puppet.srihari.guru/auth/twitter/callback",
   },
   function(token, tokenSecret, profile, done) {
     //Steal all information here! Use PuREST and profile!
@@ -171,15 +174,51 @@ function checkTwitterUser(t,ts,fid,req){
 
 	var found = false;
 
-	Identity.findOne({belongsTo: req.session.myid, Twitter: body.screen_name},function(err,iden){
-	  if(iden){
-	    iden.Twitter = body.screen_name;
-	    iden.save();
-	    found = true;
-	  }
+	//Let's try to find existing identities and merge them
+
+	//Twitter doesn't give us email, so let's try searching by name.
+	//Twitter only gives us the full name
+
+	console.log("Checking for twitter identities...");
+
+	Identity.findOne({belongsTo: req.session.myid, name: body.name}, function(err,iden){
+		if(err){
+				console.log("Oh man, something awful happened. You won't believe it.");
+			}
+		//We found it!
+		if(iden){
+			console.log("Found " + iden.name + " using name: " + body.name);
+			iden.Twitter = body.screen_name;
+			iden.save();
+			found = true;
+		}
 	});
 
+	//We couldn't find it. Let's try parsing the full name into a first and last name,
+	//maybe we'll have more success that way.
+	
+	var nameArray = body.name.split(" ", 2);
+	
 	if(!found){
+		Identity.findOne({belongsTo: req.session.myid, firstName: nameArray[0], lastName: nameArray[1]}, function(err,iden){
+			if(err){
+				console.log("Oh man, something awful happened. You won't believe it.");
+			}
+			
+			//We found it!
+			if(iden){
+				console.log("Found " + iden.name + " using first and last name: " + nameArray[0] + " " + nameArray[1]);
+				iden.Twitter = body.screen_name;
+				iden.save();
+				found = true;
+			}
+		});
+	}
+	
+	//We couldn't find it...
+
+	if(!found){
+	  console.log("Making new identitiy for : " + body.name);
 	  Identity.create({
 	    name: body.name,
 	    belongsTo: req.session.myid,
@@ -371,7 +410,7 @@ app.get('/auth/twitter/callback', passport.authenticate('twitter'),
 
 //Test success
 app.get('/auth/twitter/failure', function(req,res){
-  console.log(req.user);
+  //console.log(req.user);
   res.redirect('/');
 });
 
@@ -417,8 +456,8 @@ app.get('/auth/facebook/callback', passport.authenticate('facebook'),function(re
 
 	if(req.user){
   		console.log("!!!!");
-  		console.log(req.user);
-  		console.log(req.session.myid);
+  		//console.log(req.user);
+  		//console.log(req.session.myid);
   		/*
   		facebook.get('/' + profile.id+'/friends', {
       qs:{
@@ -433,6 +472,8 @@ app.get('/auth/facebook/callback', passport.authenticate('facebook'),function(re
       });
       */
   		
+  		console.log("Going to query some Facebook friends");
+  		
   		facebook.query()
   		  .get('/' + req.user.profile.id + '/friends')
   		  .auth(req.user.token)
@@ -443,17 +484,59 @@ app.get('/auth/facebook/callback', passport.authenticate('facebook'),function(re
   		  		
   		  		var found = false;
 
-				Identity.findOne({belongsTo: req.session.myid, Facebook: element['name']},function(err,iden){
-				  if(iden){
-				    iden.Facebook = element['name'];
-				    iden.save();
-				    found = true;
-				  }
+				//Search for identities that may match the person we found.
+				
+				//Facebook gives us email, so let's try using that first
+				
+				Identity.findOne({belongsTo: req.session.myid, email: element['email']}, function(err,iden){
+					
+					//We found it!
+					if(iden){
+						console.log("Found " + iden.name + " using email: " + element['email']);
+						iden.Facebook = element['name'];
+						iden.save();
+						found = true;
+					}
 				});
-			
+				
+				//Maybe we can search by name...
 				if(!found){
+					Identity.findOne({belongsTo: req.session.myid, name: element['name']}, function(err,iden){
+					
+						//We found it!
+						if(iden){
+							console.log("Found " + iden.name + " using name: " + element['name']);
+							iden.Facebook = element['name'];
+							iden.firstName = element['first_name'];
+							iden.lastName = element['last_name'];
+							iden.save();
+							found = true;
+						}
+					});
+				}
+				
+				//What about first and last name separate?
+				if(!found){
+					Identity.findOne({belongsTo: req.session.myid, firstName: element['first_name'], lastName: element['last_name']}, function(err,iden){
+					
+						//We found it!
+						if(iden){
+							console.log("Found " + iden.name + " using first and last name: " + element['first_name'] + " " + element['last_name']);
+							iden.Facebook = element['name'];
+							iden.save();
+							found = true;
+						}
+					});
+				}
+				
+			   
+			   //We couldn't find it...'
+				if(!found){
+				  console.log("Making a new identity for " + element['name']);
 				  Identity.create({
 				    name: element['name'],
+				    firstName: element['first_name'],
+				    lastName: element['last_name'],
 				    belongsTo: req.session.myid,
 				    Facebook: element['name'],
 				}, function(err, newFacebook){
@@ -488,7 +571,7 @@ app.get('/auth/facebook/callback', passport.authenticate('facebook'),function(re
 
 
 app.get('/auth/facebook/success', function(req,res){
-  console.log(req.session);
+  //console.log(req.session);
   res.render('facebook');
 });
 
@@ -499,7 +582,7 @@ app.get('/fbUsers', function(req,res){
 });
 
 app.get('/fbFriends', function(req,res){
-	console.log(req.session);
+	//console.log(req.session);
 	FacebookUser.findOne({'fbID' : '10204974940035158'}, function(err,user){
 		res.send(user.friends);
 	});
