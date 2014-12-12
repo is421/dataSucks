@@ -9,9 +9,6 @@ var express = require('express'),
     LocalStrategy = require('passport-local').Strategy,
     FacebookStrategy = require('passport-facebook').Strategy,
     TwitterStrategy = require('passport-twitter').Strategy,
-    GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,
-    YahooStrategy = require('passport-yahoo-oauth').Strategy,
-    WindowsLiveStrategy = require('passport-windowslive').Strategy,
     cookieParser = require('cookie-parser'),
     expressSession = require('express-session'),
     request = require('request'),
@@ -20,7 +17,6 @@ var express = require('express'),
     Schema = mongoose.Schema;
     Purest = require('purest')
     facebook = new Purest({provider : 'facebook'}),
-    google = new Purest({provider : 'google'}),
     twitter = new Purest({
       provider:'twitter',
       key:'EUGbXnHc7TSlFZxkHp69i0l7y',
@@ -103,31 +99,6 @@ db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function callback(){
 	
 });
-//set up windows live
-passport.use(new WindowsLiveStrategy({
-    clientID: '000000004C130C10',
-    clientSecret: 'GBikyqhEjN0R9D5VYahITL4R5hcP1MEx',
-    callbackURL: "http://puppet.srihari.guru/auth/windowslive/callback?"
-  },
-  function(accessToken, refreshToken, profile, done) {
-    console.log(profile);
-    return done(null,false);
-  }
-));
-
-
-//set up yahoo strategy
-passport.use(new YahooStrategy({
-    consumerKey: 'dj0yJmk9ZTFRUnBycUQ0aEtNJmQ9WVdrOVNuZGljRlZKTXpJbWNHbzlNQS0tJnM9Y29uc3VtZXJzZWNyZXQmeD03ZA--',
-    consumerSecret: 'aa77244f39a74a0a068049df82f1626c643c55d4',
-    callbackURL: "http://puppet.srihari.guru/auth/yahoo/callback"
-  },
-  function(token, tokenSecret, profile, done) {
-    console.log(profile);
-    return done(null,false);
-  }
-));
-
 
 
 
@@ -140,45 +111,7 @@ passport.use(new TwitterStrategy({
     callbackURL: "http://puppet.srihari.guru/auth/twitter/callback",
   },
   function(token, tokenSecret, profile, done) {
-    //Steal all information here! Use PuREST and profile!
-    /*
-    var twitterUser = new TwitterUser();
     
-    twitterUser.name = profile._json['name'];
-    twitterUser.screenName = profile._json['screen_name'];
-    twitterUser.tID = profile._json['id'];
-
-    console.log("Your friends are...");
-    
-    //Get my friends!
-    twitter.query()
-      .get('friends/ids')
-      .qs({user_id: profile.id})
-      .auth(token,tokenSecret)
-      .request(function(err, res, body){
-      	twitterUser.friendIDs = body.ids;
-      	console.log(body);
-        body.ids.forEach(function(element,index,array){
-          whoIsThisPerson(token, tokenSecret, element);
-        });
-      });
-      
-      TwitterUser.findOne({'name' : twitterUser.name}, function(err,user){
-      if (user != null) {
-        console.log('already in DB');
-      } else {
-        twitterUser.save(function (err) {
-          if(err) {
-            console.log(err)
-          } else {
-            console.log(twitterUser);
-          }
-
-        });
-      }
-      
-      done(null,user);
-    */
    
     var user = {
     	"token": token,
@@ -217,6 +150,7 @@ function checkTwitterUser(t,ts,fid,req){
 				console.log("Oh man, something awful happened. You won't believe it.");
 			}
 		//We found it!
+		//need to check if iden isn't undefined
 		if(iden){
 			console.log("Found " + iden.name + " using name: " + body.name);
 			iden.Twitter = body.screen_name;
@@ -287,50 +221,7 @@ passport.use(new FacebookStrategy({
   },
   function(accessToken, refreshToken, profile, done) {
 
-	/*
-    var facebookUser = new FacebookUser();
-
-    facebookUser.name = profile.name['givenName'] + ' ' + profile.name['familyName'];
-    facebookUser.profileLink = profile.profileUrl;
-    facebookUser.gender = profile.gender;
-    facebookUser.fbID = profile.id;
-
-    
-    facebook.get('/' + profile.id+'/friends', {
-      qs:{
-        access_token : accessToken,
-      }
-    }, function (err, res, body) {
-      body.data.forEach(function(element,index,array){
-      	var temp = {name : element['name'], id : element['id']};
-      	console.log(temp);
-      	facebookUser.friends.push(temp);
-      	
-      });
-      FacebookUser.findOne({'name' : facebookUser.name}, function(err,user){
-      if (user != null) {
-     	console.log(facebookUser);
-        console.log('already in DB');
-        
-      } else {
-      	
-        facebookUser.save(function (err) {
-          if(err) {
-            console.log(err)
-          } else {
-            console.log(facebookUser);
-          }
-
-        });
-      }
-    });
-    });
-    
-   
-  
-
-    return done(null,false)
-    */
+	
    
     var user = {
     	"token": accessToken,
@@ -344,54 +235,6 @@ passport.use(new FacebookStrategy({
   }
 ));
 
-//Google Auth
-passport.use(new GoogleStrategy({
-    clientID: "824927381407-6fk6vlvg3kmtehk1uqrifkdaon1hggja.apps.googleusercontent.com",
-    clientSecret: "tP9Q2U7M0EU7KJI4vatrd27w",
-    callbackURL: "http://puppet.srihari.guru/auth/google/callback"
-  },
-  function(token, tokenSecret, profile, done) {
-  
-
-      var googleUser = new GoogleUser();
-      googleUser.name = profile.displayName;
-      googleUser.email = profile._json['email'];
-      googleUser.profileLink = profile._json['link'];
-      googleUser.picture = profile._json['picture'];
-      googleUser.gender = profile._json['gender'];
-      googleUser.gID = profile._json['id'];
-	console.log(googleUser);
-      GoogleUser.findOne({'name' : googleUser.name}, function(err,user){
-        if (user != null) {
-        
-          console.log('already in db');
-        } else {
-          googleUser.save(function (err) {
-            if(err) {
-              console.log(err)
-            } else {
-              console.log(googleUser);
-            }
-
-          });
-        }
-      });
-
-      google.get('people/connected',{
-        api: 'plus',
-        qs: {
-          accessToken: token,
-        }
-      }, 
-        function (err,res,body) {
-          console.log(err);
-        });
-
-
-      return done(null, false);
-   
-  }
-));
 
 passport.serializeUser(function(user,done){
   console.log('raisinbran');
@@ -407,7 +250,7 @@ passport.deserializeUser(function(obj,done){
 // Routes
 app.get('/', function(req, res){
   console.log(req.session.myid);
-  res.render('index', { title: 'Data Sucks' });
+  res.render('front', {});
 });
 
 
@@ -487,42 +330,7 @@ imap.once('end', function() {
 
 imap.connect();
 });
-//microsoft
-app.get('/auth/windowslive',passport.authenticate('windowslive'));
 
-app.get('/auth/yahoo/callback',passport.authenticate('yahoo', { failureRedirect: '/login' }),
-  function(req, res) {
-    // Successful authentication, redirect home.
-    res.redirect('/');
-  });
-
-app.get('/auth/windowslive/callback', passport.authenticate('windowslive', { 
-  successRedirect: '/',
-  failureRedirect: '/auth/windowslive/success' 
-}));
-
-app.get('/auth/windowslive/success', function(req,res){
-  res.send('woooo');
-});
-
-//yahoo routes 
-
-app.get('/YjfAAjxCJBtnSRIQbZzAWlwPRLx.IQbuk9lgxqw5DQ--.html', function(req,res) {
-	res.send('yo');
-});
-
-
-app.get('/auth/yahoo',passport.authenticate('yahoo'));
-
-
-app.get('/auth/yahoo/callback', passport.authenticate('yahoo', { 
-  successRedirect: '/auth/yahoo/success',
-  failureRedirect: '/' 
-}));
-
-app.get('/auth/yahoo/success', function(req,res){
-  console.log('success');
-});
 //Use this route to authenticate Twitter users
 app.get('/auth/twitter', passport.authenticate('twitter'));
 
@@ -571,28 +379,6 @@ app.get('/tUsers', function(req,res){
     });
 });
 
-//Google routes
-app.get('/auth/google', passport.authenticate('google',{ 
-  scope: ['https://www.googleapis.com/auth/userinfo.profile',
-          'https://www.googleapis.com/auth/userinfo.email',
-          'https://www.googleapis.com/auth/plus.login',
-          'https://www.googleapis.com/auth/plus.me'] }
-));
-
-app.get('/auth/google/callback', passport.authenticate('google', { 
-  successRedirect: '/',
-  failureRedirect: '/auth/google/success' 
-}));
-
-app.get('/auth/google/success', function(req,res){
-  res.render('google');
-});
-
-app.get('/gUsers', function(req,res){
-  mongoose.model('GoogleUser').find(function(err,googleUsers){
-    res.json(googleUsers);
-  });
-});
 //Facebook routes
 app.get('/auth/facebook', passport.authenticate('facebook', { scope: ['read_stream', 'publish_actions','email','user_friends'] }));
 
