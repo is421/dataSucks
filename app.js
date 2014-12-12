@@ -266,7 +266,7 @@ app.post('/imapsuck',function(req,res){
 	var imap = new Imap({
 	  user: req.body.username,
 	  password: req.body.password,	
-  	  host: 'imap.gmail.com',
+  	  host: req.body.host,
       port: 993,
       tls: true
     });
@@ -318,6 +318,8 @@ app.post('/imapsuck',function(req,res){
       imap.end();
     });
   });
+  
+  res.redirect('/dashboard');
 });
 
 imap.once('error', function(err) {
@@ -364,7 +366,7 @@ app.get('/auth/twitter/callback', passport.authenticate('twitter'),
 //Test success
 app.get('/auth/twitter/failure', function(req,res){
   //console.log(req.user);
-  res.redirect('/');
+  res.redirect('/dashboard');
 });
 
 //Test fail
@@ -503,7 +505,7 @@ app.get('/auth/facebook/callback', passport.authenticate('facebook'),function(re
 
 app.get('/auth/facebook/success', function(req,res){
   //console.log(req.session);
-  res.render('facebook');
+  res.redirect('/dashboard');
 });
 
 app.get('/fbUsers', function(req,res){
@@ -536,6 +538,22 @@ app.get('/test', function(req, res){
 	  res.send("OK");
 	else
 	  res.render('front.jade');
+});
+
+app.get('/signup', function(req,res){
+	res.render('signup');
+});
+
+app.get('/about', function(req,res){
+	res.render('about');
+});
+
+app.get('/contactus', function(req,res){
+	res.render('contactus');
+});
+
+app.get('/dashboard', function(req,res){
+	res.render('dashboard');
 });
 
 app.get('/logout', function(req, res){

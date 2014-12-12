@@ -27,7 +27,7 @@ body
       .navbar.navbar-fixed-top
         .navbar-inner
           .container
-            a.brand.brand-bootbus(href='index.html') DataSucker
+            a.brand.brand-bootbus(href='/') DataSucker
             // Below button used for responsive navigation
             button.btn.btn-navbar(type='button', data-toggle='collapse', data-target='.nav-collapse')
               span.icon-bar
@@ -37,70 +37,23 @@ body
               span.icon-bar
             // Start: Primary navigation
             .nav-collapse.collapse
-              ul.nav.pull-right
-                li.dropdown
-                  a.dropdown-toggle(href='#', data-toggle='dropdown')
-                    | Services
-                    b.caret
-                  |                   
-                  ul.dropdown-menu
-                    li.nav-header SERVICES
-                    |                     
-                    li
-                      a(href='service.html') Service1
-                    |                     
-                    li
-                      a(href='service.html') Service2
-                    |                     
-                    li
-                      a(href='service.html') Service3
-                    |                     
-                    li
-                      a(href='all_services.html') All services
-                |                 
-                li.dropdown
-                  a.dropdown-toggle(href='#', data-toggle='dropdown')
-                    | About
-                    b.caret
-                  |                   
-                  ul.dropdown-menu
-                    li
-                      a(href='our_works.html') Our works
-                    |                     
-                    li
-                      a(href='patnerships.html') Parnerships
-                    |                     
-                    li
-                      a(href='leadership.html') Leadership
-                    |                     
-                    li
-                      a(href='news.html') News
-                    |                     
-                    li
-                      a(href='events.html') Events
-                    |                     
-                    li
-                      a(href='blog.html') Blog
-                |                 
+              ul.nav.pull-right               
                 li
-                  a(href='faq.html') FAQ
-                |                 
+                  a(href='/about') About
                 li
-                  a(href='contact_us.html') Contact us
-                |                 
-                li
-                  a(href='signup.html') Sign up
-                |                 
-                li
-                  a.active-link(href='signin.html') Sign in
+                  a(href='/contactus') Contact us
       // End: Navigation wrapper
     // End: HEADER
     // Start: MAIN CONTENT
     .content
       .container
-        .page-header
-          h1 Signin to DataSucker
-        |         
+        section.red-diamond-bg.hero
+          .row
+            .small-12.columns
+            h1.medium Sign in
+            |             
+            h4.normal You will stay signed in unless you sign out.
+            br
         .row
           .span6.offset3
             h4.widget-header
@@ -115,15 +68,6 @@ body
                   input(type='password', name='password', placeholder='Password')
                   |                   
                   .remember-me
-                    .pull-left
-                      label.checkbox
-                        input(type='checkbox')
-                        |  Remember me
-                    |                     
-                    .pull-right
-                      a(href='#') Forgot password?
-                    |                     
-                    .clearfix
                   |                   
                   input.btn.btn-primary.btn-large(type='submit', value='Signin')
                 |                 
@@ -131,151 +75,11 @@ body
                   i.icon-question-sign
                   |  Don&apos;t have an account?
                 |                 
-                a.btn.btn-large.bottom-space(href='signup.html') Signup
+                a.btn.btn-large.bottom-space(href='/signup') Signup
                 |                 
-                h4
-                  i.icon-thumbs-up
-                  |  Sign in with third party account
-                |                 
-                ul.signin-with-list
-                  li
-                    a.btn-twitter
-                      i.icon-twitter.icon-large
-                      |                       Signin with Twitter
-                  |                   
-                  li
-                    a.btn-facebook
-                      i.icon-facebook.icon-large
-                      |                       Signin with Facebook
-                  |                   
-                  li
-                    a.btn-google
-                      i.icon-google-plus.icon-large
-                      |                       Signin with Google
-                  |                   
-                  li
-                    a.btn-github
-                      i.icon-github.icon-large
-                      |                       Signin with Github
     // End: MAIN CONTENT
     // Start: FOOTER
-    footer
-      .container
-        .row
-          .span2
-            h4
-              i.icon-cogs.icon-white
-              |  Services
-            |             
-            nav
-              ul.quick-links
-                li
-                  a(href='service.html') Service1
-                |                 
-                li
-                  a(href='service.html') Service2
-                |                 
-                li
-                  a(href='service.html') Service3
-                |                 
-                li
-                  a(href='all_services.html') All services
-          |           
-          .span2
-            h4
-              i.icon-beaker.icon-white
-              |  About
-            |             
-            nav
-              ul.quick-links
-                li
-                  a(href='our_works.html') Our works
-                |                 
-                li
-                  a(href='patnerships.html') Patnerships
-                |                 
-                li
-                  a(href='leadership.html') Leadership
-                |                 
-                li
-                  a(href='news.html') News
-                |                 
-                li
-                  a(href='events.html') Events
-                |                 
-                li
-                  a(href='blog.html') Blog
-                |               
-                ul
-          |           
-          .span2
-            h4
-              i.icon-thumbs-up.icon-white
-              |  Support
-            |             
-            nav
-              ul.quick-links
-                li
-                  a(href='faq.html') FAQ
-                |                 
-                li
-                  a(href='contact_us.html') Contact us
-            |             
-            h4
-              i.icon-legal.icon-white
-              |  Legal
-            |             
-            nav
-              ul.quick-links
-                li
-                  a(href='#') License
-                |                 
-                li
-                  a(href='#') Terms of Use
-                |                 
-                li
-                  a(href='#') Privacy Policy
-                |                 
-                li
-                  a(href='#') Security
-          |           
-          .span3
-            h4 Get in touch
-            |             
-            .social-icons-row
-              a(href='#')
-                i.icon-twitter
-              |               
-              a(href='#')
-                i.icon-facebook
-              |               
-              a(href='#')
-                i.icon-linkedin
-            |             
-            .social-icons-row
-              a(href='#')
-                i.icon-google-plus
-              |               
-              |               
-              a(href='#')
-                i.icon-github
-              |               
-              a(href='mailto:soundar.rathinasamy@gmail.com')
-                i.icon-envelope
-            |             
-            .social-icons-row
-              i.icon-phone.icon-large.phone-number
-              |  1234566789
-          |       
-          |           
-          .span3
-            h4 Get updated by email
-            |             
-            form
-              input(type='text', name='email', placeholder='Email address')
-              |               
-              input.btn.btn-primary(type='submit', value='Subscribe')
-      |       
+    footer      
       hr.footer-divider
       |       
       .container

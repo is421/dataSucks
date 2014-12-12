@@ -16,6 +16,8 @@
   border: none;
   padding: 15px 0;
   background: url('../img/header-footer.png');
+  background-color: black;
+  color: black;
 }
 .navbar .brand-bootbus {
 	font-size: 30px;

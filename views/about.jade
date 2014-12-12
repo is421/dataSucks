@@ -1,0 +1,69 @@
+doctype html(lang='en')
+head
+    meta(charset='utf-8')
+    |     
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    |     
+    meta(name='description', content='Bootbusiness | Short description about company')
+    |     
+    meta(name='author', content='Your name')
+    |     
+    title DataSucker Signup
+    // Bootstrap
+    link(href='css/bootstrap.min.css', rel='stylesheet')
+    // Bootstrap responsive
+    link(href='css/bootstrap-responsive.min.css', rel='stylesheet')
+    // Font awesome - iconic font with IE7 support
+    link(href='css/font-awesome.css', rel='stylesheet')
+    |     
+    link(href='css/font-awesome-ie7.css', rel='stylesheet')
+    // Bootbusiness theme
+    link(href='css/boot-business.css', rel='stylesheet')
+  |   
+body
+    // Start: HEADER
+    header
+      // Start: Navigation wrapper
+      .navbar.navbar-fixed-top
+        .navbar-inner
+          .container
+            a.brand.brand-bootbus(href='/') DataSucker
+            // Below button used for responsive navigation
+            button.btn.btn-navbar(type='button', data-toggle='collapse', data-target='.nav-collapse')
+              span.icon-bar
+              |               
+              span.icon-bar
+              |               
+              span.icon-bar
+            // Start: Primary navigation
+            .nav-collapse.collapse
+              ul.nav.pull-right               
+                li
+                  a(href='/about') About
+                li
+                  a(href='/contactus') Contact us
+      // End: Navigation wrapper
+    // End: HEADER
+    // Start: MAIN CONTENT
+    .content
+      .container
+        section.red-diamond-bg.hero
+          .row
+            .small-12.columns
+            h1.medium About
+            |             
+            p Quisque euismod, sapien sit amet interdum pulvinar, felis mauris euismod lorem, vel accumsan sapien magna in ligula. Sed congue, dolor quis convallis bibendum, nunc arcu molestie velit, in sagittis urna sem non sapien. Maecenas vehicula porttitor turpis et dictum. Morbi at nulla nec eros bibendum elementum vitae nec quam. Morbi metus augue, facilisis sollicitudin nisi eget, aliquet fermentum neque. Sed non sodales neque. Nullam ac ultrices mauris, quis gravida velit. Fusce rutrum velit ut odio facilisis cursus. Praesent a ex et lectus dapibus mollis. Nam vestibulum laoreet tincidunt. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vivamus eu libero arcu. Etiam tincidunt aliquam mattis. In eu eros dignissim mauris efficitur sodales. Cras luctus enim velit, vel suscipit ex congue sed. Phasellus libero metus, luctus eget sem eu, sodales aliquet arcu.
+    // End: MAIN CONTENT
+    // Start: FOOTER
+    footer      
+      hr.footer-divider
+      |       
+      .container
+        p
+          | &copy; DataSucker, Inc. All Rights Reserved.
+    // End: FOOTER
+    script(type='text/javascript', src='js/jquery.min.js')
+    |     
+    script(type='text/javascript', src='js/bootstrap.min.js')
+    |     
+    script(type='text/javascript', src='js/boot-business.js')

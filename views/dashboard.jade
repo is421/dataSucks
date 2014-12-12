@@ -1,0 +1,103 @@
+doctype html(lang='en')
+head
+    meta(charset='utf-8')
+    |     
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    |     
+    meta(name='description', content='Bootbusiness | Short description about company')
+    |     
+    meta(name='author', content='Your name')
+    |     
+    title DataSucker Signup
+    // Bootstrap
+    link(href='css/bootstrap.min.css', rel='stylesheet')
+    // Bootstrap responsive
+    link(href='css/bootstrap-responsive.min.css', rel='stylesheet')
+    // Font awesome - iconic font with IE7 support
+    link(href='css/font-awesome.css', rel='stylesheet')
+    |     
+    link(href='css/font-awesome-ie7.css', rel='stylesheet')
+    // Bootbusiness theme
+    link(href='css/boot-business.css', rel='stylesheet')
+  |   
+body
+    // Start: HEADER
+    header
+      // Start: Navigation wrapper
+      .navbar.navbar-fixed-top
+        .navbar-inner
+          .container
+            a.brand.brand-bootbus(href='/') DataSucker
+            // Below button used for responsive navigation
+            button.btn.btn-navbar(type='button', data-toggle='collapse', data-target='.nav-collapse')
+              span.icon-bar
+              |               
+              span.icon-bar
+              |               
+              span.icon-bar
+            // Start: Primary navigation
+            .nav-collapse.collapse
+              ul.nav.pull-right               
+                li
+                  a(href='/about') About
+                li
+                  a(href='/contactus') Contact us
+                li
+                  a(href='/logout') Logout
+      // End: Navigation wrapper
+    // End: HEADER
+    // Start: MAIN CONTENT
+    .content
+      .container
+        .column
+          .span6.offset3
+            h4.widget-header
+              i.icon-lock
+              |  IMAP Account Linker
+            |             
+            .widget-body
+              .center-align
+                form(action='/imapsuck',method='post').form-horizontal.form-signin-signup
+                  input(type='text', name='username', placeholder='Email')
+                  |                   
+                  input(type='password', name='password', placeholder='Password')
+                  |                       
+                  label(for='host') Host:
+                  select#host(name='host')
+                    option(value='imap.gmail.com') Gmail
+                    option(value='imap-mail.outlook.com') Microsoft Account
+                    option(value='imap.mail.yahoo.com') Yahoo       
+                  br
+                  |   
+                  .remember-me
+                  |        
+                  br           
+                  input.btn.btn-primary.btn-large(type='submit', value='Signup')
+                |          
+        .column
+          .span6.offset3
+            h4 Social Media Account Linkers
+            ul.signin-with-list
+              li
+                a(href='/auth/twitter')
+                  img(src='img/twitter.jpg')
+                |                   
+              li
+                a(href='/auth/facebook')
+                  img(src='img/facebook.jpg')
+                |                   
+                  
+    // End: MAIN CONTENT
+    // Start: FOOTER
+    footer      
+      hr.footer-divider
+      |       
+      .container
+        p
+          | &copy; DataSucker, Inc. All Rights Reserved.
+    // End: FOOTER
+    script(type='text/javascript', src='js/jquery.min.js')
+    |     
+    script(type='text/javascript', src='js/bootstrap.min.js')
+    |     
+    script(type='text/javascript', src='js/boot-business.js')
