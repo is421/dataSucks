@@ -47,6 +47,9 @@ userSchema.methods.validPassword = function(password){
 
 var identitySchema = new Schema({
 	name: String,
+	firstName: String,
+	lastName: String,
+	email: String,
 	belongsTo: String,
 	Twitter: String,
 	Facebook: String,
@@ -181,6 +184,8 @@ passport.use(new TwitterStrategy({
     	"token": token,
     	"secret": tokenSecret,
     	"profile": profile,
+	"token": token,
+	"tokenSecret": tokenSecret,
     }; 
     
     return done(null,user); 
@@ -197,14 +202,65 @@ function checkTwitterUser(t,ts,fid,req){
     .qs({user_id: fid})
     .auth(t,ts)
     .request(function(err, res, body){
-      Identity.findOrCreate({belongsTo: req.session.myid}, function(err,iden){
-      	if(err) { return done(err); }
-      	iden.Twitter = body.screen_name;
-      	iden.save();
-      })
-    });
-    
-  //
+
+	var found = false;
+
+	//Let's try to find existing identities and merge them
+
+	//Twitter doesn't give us email, so let's try searching by name.
+	//Twitter only gives us the full name
+
+	console.log("Checking for twitter identities...");
+
+	Identity.findOne({belongsTo: req.session.myid, name: body.name}, function(err,iden){
+		if(err){
+				console.log("Oh man, something awful happened. You won't believe it.");
+			}
+		//We found it!
+		if(iden){
+			console.log("Found " + iden.name + " using name: " + body.name);
+			iden.Twitter = body.screen_name;
+			iden.save();
+			found = true;
+		}
+	});
+
+	//We couldn't find it. Let's try parsing the full name into a first and last name,
+	//maybe we'll have more success that way.
+	
+	var nameArray = body.name.split(" ", 2);
+	
+	if(!found){
+		Identity.findOne({belongsTo: req.session.myid, firstName: nameArray[0], lastName: nameArray[1]}, function(err,iden){
+			if(err){
+				console.log("Oh man, something awful happened. You won't believe it.");
+			}
+			
+			//We found it!
+			if(iden){
+				console.log("Found " + iden.name + " using first and last name: " + nameArray[0] + " " + nameArray[1]);
+				iden.Twitter = body.screen_name;
+				iden.save();
+				found = true;
+			}
+		});
+	}
+	
+	//We couldn't find it...
+
+	if(!found){
+	  console.log("Making new identitiy for : " + body.name);
+	  Identity.create({
+	    name: body.name,
+	    belongsTo: req.session.myid,
+	    Twitter: body.screen_name,
+	}, function(err, newTwitter){
+		if(err)
+		  console.log("Error saving Twitter identity");
+	   });
+    }
+	
+  });
 }
 
 passport.use(new LocalStrategy(
@@ -231,7 +287,7 @@ passport.use(new FacebookStrategy({
   },
   function(accessToken, refreshToken, profile, done) {
 
-
+	/*
     var facebookUser = new FacebookUser();
 
     facebookUser.name = profile.name['givenName'] + ' ' + profile.name['familyName'];
@@ -273,14 +329,25 @@ passport.use(new FacebookStrategy({
    
   
 
-    return done(null,false) 
+    return done(null,false)
+    */
+   
+    var user = {
+    	"token": accessToken,
+    	//"secret": tokenSecret,
+    	"profile": profile,
+	//"token": token,
+	//"tokenSecret": tokenSecret,
+    }; 
+    
+    return done(null,user);  
   }
 ));
 
 //Google Auth
 passport.use(new GoogleStrategy({
-    clientID: "1069961481861-6suv06q4hrq9mt7oi7eu54tfjgkth89c.apps.googleusercontent.com",
-    clientSecret: "I8eLUjYT-FOtqnwadxcAgQJD",
+    clientID: "824927381407-6fk6vlvg3kmtehk1uqrifkdaon1hggja.apps.googleusercontent.com",
+    clientSecret: "tP9Q2U7M0EU7KJI4vatrd27w",
     callbackURL: "http://puppet.srihari.guru/auth/google/callback"
   },
   function(token, tokenSecret, profile, done) {
@@ -469,13 +536,13 @@ app.get('/auth/twitter/callback', passport.authenticate('twitter'),
   		
   		twitter.query()
       	  .get('friends/ids')
-      	  .qs({user_id: profile.id})
-      	  .auth(token,tokenSecret)
+      	  .qs({user_id: req.user.id})
+      	  .auth(req.user.token,req.user.tokenSecret)
       	  .request(function(err, res, body){
-      		twitterUser.friendIDs = body.ids;
+      		//twitterUser.friendIDs = body.ids;
       		console.log(body);
         	body.ids.forEach(function(element,index,array){
-          	checkTwitterUser(token, tokenSecret, element, req);
+          	checkTwitterUser(req.user.token, req.user.tokenSecret, element, req);
         });
       });
   		
@@ -488,7 +555,7 @@ app.get('/auth/twitter/callback', passport.authenticate('twitter'),
 
 //Test success
 app.get('/auth/twitter/failure', function(req,res){
-  console.log(req.user);
+  //console.log(req.user);
   res.redirect('/');
 });
 
@@ -529,13 +596,127 @@ app.get('/gUsers', function(req,res){
 //Facebook routes
 app.get('/auth/facebook', passport.authenticate('facebook', { scope: ['read_stream', 'publish_actions','email','user_friends'] }));
 
-app.get('/auth/facebook/callback', passport.authenticate('facebook', {
-  successRedirect: '/',
-  failureRedirect: '/auth/facebook/success',
-}));
+
+app.get('/auth/facebook/callback', passport.authenticate('facebook'),function(req,res){
+
+	if(req.user){
+  		console.log("!!!!");
+  		//console.log(req.user);
+  		//console.log(req.session.myid);
+  		/*
+  		facebook.get('/' + profile.id+'/friends', {
+      qs:{
+        access_token : accessToken,
+      }
+    }, function (err, res, body) {
+      body.data.forEach(function(element,index,array){
+      	var temp = {name : element['name'], id : element['id']};
+      	console.log(temp);
+      	facebookUser.friends.push(temp);
+      	
+      });
+      */
+  		
+  		console.log("Going to query some Facebook friends");
+  		
+  		facebook.query()
+  		  .get('/' + req.user.profile.id + '/friends')
+  		  .auth(req.user.token)
+  		  .request(function(err,res,body){
+  		  	
+  		  	body.data.forEach(function(element,index,array){
+  		  		console.log(element['name']);
+  		  		
+  		  		var found = false;
+
+				//Search for identities that may match the person we found.
+				
+				//Facebook gives us email, so let's try using that first
+				
+				Identity.findOne({belongsTo: req.session.myid, email: element['email']}, function(err,iden){
+					
+					//We found it!
+					if(iden){
+						console.log("Found " + iden.name + " using email: " + element['email']);
+						iden.Facebook = element['name'];
+						iden.save();
+						found = true;
+					}
+				});
+				
+				//Maybe we can search by name...
+				if(!found){
+					Identity.findOne({belongsTo: req.session.myid, name: element['name']}, function(err,iden){
+					
+						//We found it!
+						if(iden){
+							console.log("Found " + iden.name + " using name: " + element['name']);
+							iden.Facebook = element['name'];
+							iden.firstName = element['first_name'];
+							iden.lastName = element['last_name'];
+							iden.save();
+							found = true;
+						}
+					});
+				}
+				
+				//What about first and last name separate?
+				if(!found){
+					Identity.findOne({belongsTo: req.session.myid, firstName: element['first_name'], lastName: element['last_name']}, function(err,iden){
+					
+						//We found it!
+						if(iden){
+							console.log("Found " + iden.name + " using first and last name: " + element['first_name'] + " " + element['last_name']);
+							iden.Facebook = element['name'];
+							iden.save();
+							found = true;
+						}
+					});
+				}
+				
+			   
+			   //We couldn't find it...'
+				if(!found){
+				  console.log("Making a new identity for " + element['name']);
+				  Identity.create({
+				    name: element['name'],
+				    firstName: element['first_name'],
+				    lastName: element['last_name'],
+				    belongsTo: req.session.myid,
+				    Facebook: element['name'],
+				}, function(err, newFacebook){
+					if(err)
+					  console.log("Error saving Facebook identity");
+				   });
+			    }
+  		  		
+  		  	});
+  		  	
+  		  });
+  		/*
+  		twitter.query()
+      	  .get('friends/ids')
+      	  .qs({user_id: req.user.id})
+      	  .auth(req.user.token,req.user.tokenSecret)
+      	  .request(function(err, res, body){
+      		//twitterUser.friendIDs = body.ids;
+      		console.log(body);
+        	body.ids.forEach(function(element,index,array){
+          	checkTwitterUser(req.user.token, req.user.tokenSecret, element, req);
+        });
+        
+      }); */
+  		
+  	}
+  	else{
+  		console.log(":(");
+  	}
+});
+
+
 
 app.get('/auth/facebook/success', function(req,res){
-  console.log(req.session);
+  //console.log(req.session);
   res.render('facebook');
 });
 
@@ -546,7 +727,7 @@ app.get('/fbUsers', function(req,res){
 });
 
 app.get('/fbFriends', function(req,res){
-	console.log(req.session);
+	//console.log(req.session);
 	FacebookUser.findOne({'fbID' : '10204974940035158'}, function(err,user){
 		res.send(user.friends);
 	});
