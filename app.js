@@ -302,7 +302,7 @@ app.post('/imapsuck',function(req,res){
           //console.log(em[0], buffer);
           var emailUser = [em[0],buffer]; //email, name
           
-          console.log(emailUser);
+          //console.log(emailUser);
           
           emailIdentity(emailUser,req.session.myid);
           
@@ -343,51 +343,59 @@ function emailIdentity(emailUser, myID){
 	//emailUser[0] = email emailUser[1] = name
 	
 	//Let's try to search by name first.
+	
 	Identity.findOne({belongsTo: myID, name: emailUser[1]}, function(err,iden){
-					
+		
+		if(err){
+			console.log(err);
+			return;
+		}
+		
 		//We found it!
 		if(iden){
 			console.log("Found " + iden.name + " using name: " + emailUser[1]);
 			if(!iden.email){
-				iden.update({
-					email: emailUser[0],
-				},function(err){
-					if(err) console.log(err);
-				});
-							
+				iden.email = emailUser[0];
+				iden.save();
 			}
 			return;
 		}
-	});
-	
-	//What about searching by email?
-	Identity.findOne({belongsTo: myID, email: emailUser[0]}, function(err,iden){
-					
-		//We found it!
-		if(iden){
-			console.log("Found " + iden.name + " using email: " + emailUser[0]);
-			if(!iden.name){
-				iden.update({
+		else{
+			
+			Identity.findOne({belongsTo: myID, email: emailUser[0]}, function(err,iden){
+			
+			if(err){
+				console.log(err);
+				return;
+			}
+				
+			//We found it!
+			if(iden){
+				console.log("Found " + iden.name + " using email: " + emailUser[0]);
+				if(!iden.name){
+					iden.name = emailUser[1];
+					iden.save();
+								
+				}
+				return;
+			}
+			else{
+				
+				//Couldn't find this person. We should make a new identity.
+				console.log(myID);
+				Identity.create({
 					name: emailUser[1],
-				},function(err){
-					if(err) console.log(err);
+					belongsTo: myID,
+					email: emailUser[0],
+				}, function(err){
+					if(err)
+					  console.log("Error saving new email identity");
 				});
-							
 			}
-			return;
+	});
 		}
 	});
 	
-	//Couldn't find this person. We should make a new identity.
-	
-	Identity.create({
-		name: emailUser[1],
-		belongsTo: myID,
-		email: emailUser[0],
-	}, function(err){
-		if(err)
-		  console.log("Error saving new email identity");
-	});
 	
 }
 
