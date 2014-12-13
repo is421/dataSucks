@@ -137,63 +137,57 @@ function checkTwitterUser(t,ts,fid,req){
     .auth(t,ts)
     .request(function(err, res, body){
 
-	var found = false;
+	//What is this travesty?
 
-	//Let's try to find existing identities and merge them
-
-	//Twitter doesn't give us email, so let's try searching by name.
-	//Twitter only gives us the full name
-
-	console.log("Checking for twitter identities...");
-
-	Identity.findOne({belongsTo: req.session.myid, name: body.name}, function(err,iden){
+	Identity.findOne({belongsTo: String(req.session.myid), name: body.name}, function(err,iden){
 		if(err){
 				console.log("Oh man, something awful happened. You won't believe it.");
+				return;
 			}
 		//We found it!
-		//need to check if iden isn't undefined
 		if(iden){
 			console.log("Found " + iden.name + " using name: " + body.name);
-			iden.Twitter = body.screen_name;
-			iden.save();
-			found = true;
+			iden.update({
+				Twitter: body.screen_name,
+			});
+
 		}
-	});
-
-	//We couldn't find it. Let's try parsing the full name into a first and last name,
-	//maybe we'll have more success that way.
-	
-	var nameArray = body.name.split(" ", 2);
-	
-	if(!found){
-		Identity.findOne({belongsTo: req.session.myid, firstName: nameArray[0], lastName: nameArray[1]}, function(err,iden){
-			if(err){
-				console.log("Oh man, something awful happened. You won't believe it.");
-			}
+		else{
 			
-			//We found it!
-			if(iden){
-				console.log("Found " + iden.name + " using first and last name: " + nameArray[0] + " " + nameArray[1]);
-				iden.Twitter = body.screen_name;
-				iden.save();
-				found = true;
-			}
-		});
-	}
+			var nameArray = body.name.split(" ", 2);
 	
-	//We couldn't find it...
+			Identity.findOne({belongsTo: String(req.session.myid), firstName: nameArray[0], lastName: nameArray[1]}, function(err,iden){
+				if(err){
+					console.log("Oh man, something awful happened. You won't believe it.");
+					return;
+				}
+				
+				//We found it!
+				if(iden){
+					console.log("Found " + iden.name + " using first and last name: " + nameArray[0] + " " + nameArray[1]);
+					iden.update({
+						Twitter: body.screen_name,
+					});
+					
+				}
+				else{
+					//We couldn't find it...
 
-	if(!found){
-	  console.log("Making new identitiy for : " + body.name);
-	  Identity.create({
-	    name: body.name,
-	    belongsTo: req.session.myid,
-	    Twitter: body.screen_name,
-	}, function(err, newTwitter){
-		if(err)
-		  console.log("Error saving Twitter identity");
-	   });
-    }
+					  console.log("Making new identity for : " + body.name);
+					  Identity.create({
+					    name: body.name,
+					    belongsTo: req.session.myid,
+					    Twitter: body.screen_name,
+					}, function(err, newTwitter){
+						if(err)
+						  console.log("Error saving Twitter identity");
+					   });
+				}
+			});
+			
+		}
+		
+	});
 	
   });
 }
