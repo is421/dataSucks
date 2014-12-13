@@ -23,7 +23,8 @@ var express = require('express'),
       secret:'fSmqoroZtrybNHYSehI0U3iEWoPzHNLSz6Nxb4EyLoHAxxiGIZ',    
     }),
     Imap = require('imap'),
-    inspect = require('util').inspect;
+    inspect = require('util').inspect,
+    url = require('url');
 
 
 
@@ -237,20 +238,20 @@ passport.use(new FacebookStrategy({
 
 
 passport.serializeUser(function(user,done){
-  console.log('raisinbran');
-  console.log(user);
   done(null, user);
 });
 
 passport.deserializeUser(function(obj,done){
-  console.log('emptybowl');
   done(null, obj);
 });
 
 // Routes
 app.get('/', function(req, res){
-  console.log(req.session.myid);
-  res.render('front', {});
+  if(req.user)
+    res.redirect('/dashboard');
+  else
+    res.render('front', {});
+  
 });
 
 
@@ -340,9 +341,6 @@ app.get('/auth/twitter', passport.authenticate('twitter'));
 app.get('/auth/twitter/callback', passport.authenticate('twitter'),
   function(req,res){
   	if(req.user){
-  		console.log("!!!!");
-  		console.log(req.user);
-  		console.log(req.session.myid);
   		
   		twitter.query()
       	  .get('friends/ids')
@@ -358,14 +356,16 @@ app.get('/auth/twitter/callback', passport.authenticate('twitter'),
   		
   	}
   	else{
-  		console.log(":(");
+  		console.log("Could not identify user!");
   	}
-  }); //failing is actually succeding
+  	
+  	res.redirect('/dashboard');
+  });
 
 
 //Test success
 app.get('/auth/twitter/failure', function(req,res){
-  //console.log(req.user);
+  console.log('Twitter authorization failed!');
   res.redirect('/dashboard');
 });
 
@@ -388,22 +388,6 @@ app.get('/auth/facebook', passport.authenticate('facebook', { scope: ['read_stre
 app.get('/auth/facebook/callback', passport.authenticate('facebook'),function(req,res){
 
 	if(req.user){
-  		console.log("!!!!");
-  		//console.log(req.user);
-  		//console.log(req.session.myid);
-  		/*
-  		facebook.get('/' + profile.id+'/friends', {
-      qs:{
-        access_token : accessToken,
-      }
-    }, function (err, res, body) {
-      body.data.forEach(function(element,index,array){
-      	var temp = {name : element['name'], id : element['id']};
-      	console.log(temp);
-      	facebookUser.friends.push(temp);
-      	
-      });
-      */
   		
   		console.log("Going to query some Facebook friends");
   		
@@ -481,24 +465,13 @@ app.get('/auth/facebook/callback', passport.authenticate('facebook'),function(re
   		  	});
   		  	
   		  });
-  		/*
-  		twitter.query()
-      	  .get('friends/ids')
-      	  .qs({user_id: req.user.id})
-      	  .auth(req.user.token,req.user.tokenSecret)
-      	  .request(function(err, res, body){
-      		//twitterUser.friendIDs = body.ids;
-      		console.log(body);
-        	body.ids.forEach(function(element,index,array){
-          	checkTwitterUser(req.user.token, req.user.tokenSecret, element, req);
-        });
-        
-      }); */
   		
   	}
   	else{
-  		console.log(":(");
+  		console.log("Could not establish identity!");
   	}
+  	
+  	res.redirect('/dashboard');
 });
 
 
@@ -524,13 +497,41 @@ app.get('/fbFriends', function(req,res){
 
 app.post('/auth/local',
   passport.authenticate('local', { successRedirect: '/newsession',
-                                   failureRedirect: '/test',
+                                   failureRedirect: '/',
                                    failureFlash: true })
 );
 
+app.post('/auth/newaccount', function(req,res){
+	
+	console.log(req.body.username);
+	console.log(req.body.password);
+	console.log(req.body.password2);
+
+	if(req.body.email != '' && req.body.password != '' && req.body.password2 != ''){
+		if(req.body.password == req.body.password2){
+			User.create({
+				username: req.body.username,
+				password: req.body.password,
+			}, function(err, newAccount){
+				if(err)
+				  console.log("Error making new account");
+			});
+		}
+		else{
+			res.redirect('/signup');
+		}
+		
+	}
+	else{
+		res.redirect('/signup');
+	}
+	
+	res.redirect('/');
+});
+
 app.get('/newsession',function(req,res){
 	req.session.myid = req.user._id;
-	res.redirect('/');
+	res.redirect('/dashboard');
 });
 
 app.get('/test', function(req, res){
@@ -553,6 +554,7 @@ app.get('/contactus', function(req,res){
 });
 
 app.get('/dashboard', function(req,res){
+	console.log(req.session.myid);
 	res.render('dashboard');
 });
 
