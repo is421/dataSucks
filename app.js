@@ -302,6 +302,8 @@ app.post('/imapsuck',function(req,res){
           
           console.log(emailUser);
           
+          emailIdentity(emailUser,req.session.myid);
+          
         });
       });
       msg.once('attributes', function(attrs) {
@@ -333,6 +335,59 @@ imap.once('end', function() {
 
 imap.connect();
 });
+
+function emailIdentity(emailUser, myID){
+	
+	//emailUser[0] = email emailUser[1] = name
+	
+	//Let's try to search by name first.
+	Identity.findOne({belongsTo: myID, name: emailUser[1]}, function(err,iden){
+					
+		//We found it!
+		if(iden){
+			console.log("Found " + iden.name + " using name: " + emailUser[1]);
+			if(!iden.email){
+				iden.update({
+					email: emailUser[0],
+				},function(err){
+					if(err) console.log(err);
+				});
+							
+			}
+			return;
+		}
+	});
+	
+	//What about searching by email?
+	Identity.findOne({belongsTo: myID, email: emailUser[0]}, function(err,iden){
+					
+		//We found it!
+		if(iden){
+			console.log("Found " + iden.name + " using email: " + emailUser[0]);
+			if(!iden.name){
+				iden.update({
+					name: emailUser[1],
+				},function(err){
+					if(err) console.log(err);
+				});
+							
+			}
+			return;
+		}
+	});
+	
+	//Couldn't find this person. We should make a new identity.
+	
+	Identity.create({
+		name: emailUser[1],
+		belongsTo: myID,
+		email: emailUser[0],
+	}, function(err){
+		if(err)
+		  console.log("Error saving new email identity");
+	});
+	
+}
 
 //Use this route to authenticate Twitter users
 app.get('/auth/twitter', passport.authenticate('twitter'));
@@ -554,8 +609,14 @@ app.get('/contactus', function(req,res){
 });
 
 app.get('/dashboard', function(req,res){
-	console.log(req.session.myid);
-	res.render('dashboard');
+	if(req.session.myid){
+		console.log(req.session.myid);
+		res.render('dashboard');
+	}
+	else{
+		res.redirect('/');
+	}
+	
 });
 
 app.get('/logout', function(req, res){
