@@ -19,6 +19,7 @@ head
     link(href='css/font-awesome-ie7.css', rel='stylesheet')
     // Bootbusiness theme
     link(href='css/boot-business.css', rel='stylesheet')
+    link(href='//cdnjs.cloudflare.com/ajax/libs/bootcards/1.0.0/css/bootcards-desktop-lite.min.css', rel='stylesheet')
   |   
 body
     // Start: HEADER
@@ -39,6 +40,8 @@ body
             .nav-collapse.collapse
               ul.nav.pull-right 
                 li
+                  a(href='/dashboard') Dashboard
+                li
                   a(href='/contacts') Contacts              
                 li
                   a(href='/about') About
@@ -51,44 +54,19 @@ body
     // Start: MAIN CONTENT
     .content
       .container
-        .column
-          .span6.offset3
-            h4.widget-header
-              i.icon-lock
-              |  IMAP Account Linker
-            |             
-            .widget-body
-              .center-align
-                form(action='/imapsuck',method='post').form-horizontal.form-signin-signup
-                  input(type='text', name='username', placeholder='Email')
-                  |                   
-                  input(type='password', name='password', placeholder='Password')
-                  |                       
-                  label(for='host') Host:
-                  select#host(name='host')
-                    option(value='imap.gmail.com') Gmail
-                    option(value='imap-mail.outlook.com') Microsoft Account
-                    option(value='imap.mail.yahoo.com') Yahoo       
-                  br
-                  |   
-                  .remember-me
-                  |        
-                  br           
-                  input.btn.btn-primary.btn-large(type='submit', value='Link')
-                |          
-        .column
-          .span6.offset3
-            h4 Social Media Account Linkers
-            ul.signin-with-list
-              li
-                a(href='/auth/twitter')
-                  img(src='img/twitter.jpg')
-                |                   
-              li
-                a(href='/auth/facebook')
-                  img(src='img/facebook.jpg')
-                |                   
-                  
+        table.table.table-striped
+          tr  
+            th Name
+            th Email
+            th Twitter Name
+            th Facebook Name
+          each val in idents
+            tr
+              td= val.name
+              td= val.email
+              td= val.Twitter
+              td= val.Facebook
+           
     // End: MAIN CONTENT
     // Start: FOOTER
     footer      
@@ -103,3 +81,4 @@ body
     script(type='text/javascript', src='js/bootstrap.min.js')
     |     
     script(type='text/javascript', src='js/boot-business.js')
+    script(type='text/javascript', src='//cdnjs.cloudflare.com/ajax/libs/bootcards/1.0.0/js/bootcards.min.js')

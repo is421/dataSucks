@@ -145,7 +145,7 @@ function checkTwitterUser(t,ts,fid,req){
 				return;
 			}
 		//We found it!
-		if(iden){
+		if(iden && iden != undefined){
 			console.log("Found " + iden.name + " using name: " + body.name);
 			/*Identity.update({belongsTo: req.session.myid, name: body.name},
 			{
@@ -564,7 +564,6 @@ app.get('/auth/facebook/callback', passport.authenticate('facebook'),function(re
   		console.log("Could not establish identity!");
   	}
   	
-  	res.redirect('/dashboard');
 });
 
 
@@ -655,6 +654,26 @@ app.get('/dashboard', function(req,res){
 		res.redirect('/');
 	}
 	
+});
+
+app.get('/contacts',function(req,res){
+	Identity.find({belongsTo: req.session.myid},function(err,idens){
+		if(err) {
+			console.log(err);
+		} else {
+			res.render('contacts',{idents: idens});
+		}
+	});
+});
+
+app.get('/api/contacts',function(res,req){
+	Identity.find({belongsTo: req.session.myid},function(err,idens){
+		if(err) {
+			console.log(err);
+		} else {
+			res.send(idens);
+		}
+	});
 });
 
 app.get('/logout', function(req, res){
