@@ -16,10 +16,10 @@ public class signup {
 	        String name = scan.nextLine();
 	        System.out.println("Enter a password");
 	        String pass = scan.nextLine();
-	        
+
 	        WebDriver driver = new FirefoxDriver();
-	        String baseUrl="http://localhost:80";
-	        driver.get(baseUrl + "/signup");
+	        String baseUrl="http://localhost/";
+	        driver.get(baseUrl + "signup");
 	        
 	        WebElement username = driver.findElement(By.name("username"));
 	        WebElement password = driver.findElement(By.name("password"));
@@ -30,6 +30,10 @@ public class signup {
 	        password.sendKeys(pass);
 	        confirmPassword.sendKeys(pass);
 	        btn.submit();
+
+	        if(driver.getCurrentUrl().equals(baseUrl)){
+	        	System.out.println("Success");
+	        } else System.out.println("Fail");
 
 	}
 
