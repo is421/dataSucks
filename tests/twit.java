@@ -10,7 +10,10 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 public class twit {
 	
     public static void main(String[] args) {
-    	 
+    	
+        test login = new test();
+        WebDriver driver = login.mainLogin();
+
         Scanner scan = new Scanner(System.in);
         System.out.println("Enter a valid twitter username/email");
         String name = scan.nextLine();
@@ -18,7 +21,6 @@ public class twit {
         String pass = scan.nextLine();
        
        //Open firefox on localhost
-        WebDriver driver = new FirefoxDriver();
         String baseUrl="http://localhost:80";
         driver.get(baseUrl + "/dashboard");
 

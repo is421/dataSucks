@@ -11,6 +11,9 @@ public class fb {
 	
     public static void main(String[] args) {
     	 
+        test login = new test();
+        WebDriver driver = login.mainLogin();
+
         Scanner scan = new Scanner(System.in);
         System.out.println("Enter a valid facebook email/phone");
         String name = scan.nextLine();
@@ -18,7 +21,6 @@ public class fb {
         String pass = scan.nextLine();
        
        //Open firefox on localhost
-        WebDriver driver = new FirefoxDriver();
         String baseUrl="http://localhost:80";
         driver.get(baseUrl + "/dashboard");
 
@@ -30,10 +32,10 @@ public class fb {
         
         WebElement username = driver.findElement(By.cssSelector("input[class=\"inputtext\"]"));
         WebElement password = driver.findElement(By.cssSelector("input[class=\"inputpassword\"]"));
-        WebElement login  = driver.findElement(By.cssSelector("input[value=\"Log In\"]"));
+        WebElement loginbtn  = driver.findElement(By.cssSelector("input[value=\"Log In\"]"));
         username.sendKeys(name);
         password.sendKeys(pass);
-        login.click();
+        loginbtn.click();
         
         if(driver.findElements(By.cssSelector("div[class=\"pam login_error_box uiBoxRed\"]")).size() != 0){
         	System.out.println(driver.findElement(By.cssSelector("div[class=\"pam login_error_box uiBoxRed\"]")).getText());

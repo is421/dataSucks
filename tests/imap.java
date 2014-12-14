@@ -10,6 +10,10 @@ import org.openqa.selenium.support.ui.Select;
 public class imap {
 	
     public static void main(String[] args) {
+
+        test login = new test();
+        WebDriver driver = login.mainLogin();
+
         String[] tmp = {"Gmail", "Microsoft Account", "Yahoo"};
         //host dropdown
         String host = (String) JOptionPane.showInputDialog(null, "Choose a Host",
@@ -27,7 +31,6 @@ public class imap {
         String pass = scan.nextLine();
        
        //Open firefox on localhost
-        WebDriver driver = new FirefoxDriver();
         String baseUrl="http://localhost:80";
         driver.get(baseUrl + "/dashboard");
         
