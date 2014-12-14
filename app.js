@@ -23,7 +23,8 @@ var express = require('express'),
       secret:'fSmqoroZtrybNHYSehI0U3iEWoPzHNLSz6Nxb4EyLoHAxxiGIZ',    
     }),
     Imap = require('imap'),
-    inspect = require('util').inspect;
+    inspect = require('util').inspect,
+    url = require('url');
 
 
 
@@ -136,63 +137,65 @@ function checkTwitterUser(t,ts,fid,req){
     .auth(t,ts)
     .request(function(err, res, body){
 
-	var found = false;
-
-	//Let's try to find existing identities and merge them
-
-	//Twitter doesn't give us email, so let's try searching by name.
-	//Twitter only gives us the full name
-
-	console.log("Checking for twitter identities...");
+	//What is this travesty?
 
 	Identity.findOne({belongsTo: req.session.myid, name: body.name}, function(err,iden){
 		if(err){
 				console.log("Oh man, something awful happened. You won't believe it.");
+				return;
 			}
 		//We found it!
-		//need to check if iden isn't undefined
 		if(iden){
 			console.log("Found " + iden.name + " using name: " + body.name);
+			/*Identity.update({belongsTo: req.session.myid, name: body.name},
+			{
+				Twitter: body.screen_name,
+			});*/
 			iden.Twitter = body.screen_name;
 			iden.save();
-			found = true;
+
 		}
-	});
-
-	//We couldn't find it. Let's try parsing the full name into a first and last name,
-	//maybe we'll have more success that way.
-	
-	var nameArray = body.name.split(" ", 2);
-	
-	if(!found){
-		Identity.findOne({belongsTo: req.session.myid, firstName: nameArray[0], lastName: nameArray[1]}, function(err,iden){
-			if(err){
-				console.log("Oh man, something awful happened. You won't believe it.");
-			}
+		else{
 			
-			//We found it!
-			if(iden){
-				console.log("Found " + iden.name + " using first and last name: " + nameArray[0] + " " + nameArray[1]);
-				iden.Twitter = body.screen_name;
-				iden.save();
-				found = true;
-			}
-		});
-	}
+			var nameArray = body.name.split(" ", 2);
 	
-	//We couldn't find it...
+			Identity.findOne({belongsTo: req.session.myid, firstName: nameArray[0], lastName: nameArray[1]}, function(err,iden){
+				if(err){
+					console.log("Oh man, something awful happened. You won't believe it.");
+					return;
+				}
+				
+				//We found it!
+				if(iden){
+					console.log("Found " + iden.name + " using first and last name: " + nameArray[0] + " " + nameArray[1]);
+					/*Identity.update({belongsTo: req.session.myid, firstName: nameArray[0], lastName: nameArray[1]},
+					{
+						Twitter: body.screen_name,
+					});*/
+					
+					iden.Twitter = body.screen_name;
+					iden.save();
+					
+				}
+				else{
+					//We couldn't find it...
 
-	if(!found){
-	  console.log("Making new identitiy for : " + body.name);
-	  Identity.create({
-	    name: body.name,
-	    belongsTo: req.session.myid,
-	    Twitter: body.screen_name,
-	}, function(err, newTwitter){
-		if(err)
-		  console.log("Error saving Twitter identity");
-	   });
-    }
+					  console.log("Making new identity for : " + body.name);
+					  Identity.create({
+					    name: body.name,
+					    belongsTo: req.session.myid,
+					    Twitter: body.screen_name,
+					    Facebook: '',
+					}, function(err, newTwitter){
+						if(err)
+						  console.log("Error saving Twitter identity");
+					   });
+				}
+			});
+			
+		}
+		
+	});
 	
   });
 }
@@ -237,20 +240,20 @@ passport.use(new FacebookStrategy({
 
 
 passport.serializeUser(function(user,done){
-  console.log('raisinbran');
-  console.log(user);
   done(null, user);
 });
 
 passport.deserializeUser(function(obj,done){
-  console.log('emptybowl');
   done(null, obj);
 });
 
 // Routes
 app.get('/', function(req, res){
-  console.log(req.session.myid);
-  res.render('front', {});
+  if(req.user)
+    res.redirect('/dashboard');
+  else
+    res.render('front', {});
+  
 });
 
 
@@ -299,7 +302,9 @@ app.post('/imapsuck',function(req,res){
           //console.log(em[0], buffer);
           var emailUser = [em[0],buffer]; //email, name
           
-          console.log(emailUser);
+          //console.log(emailUser);
+          
+          emailIdentity(emailUser,req.session.myid);
           
         });
       });
@@ -333,6 +338,67 @@ imap.once('end', function() {
 imap.connect();
 });
 
+function emailIdentity(emailUser, myID){
+	
+	//emailUser[0] = email emailUser[1] = name
+	
+	//Let's try to search by name first.
+	
+	Identity.findOne({belongsTo: myID, name: emailUser[1]}, function(err,iden){
+		
+		if(err){
+			console.log(err);
+			return;
+		}
+		
+		//We found it!
+		if(iden){
+			console.log("Found " + iden.name + " using name: " + emailUser[1]);
+			if(!iden.email){
+				iden.email = emailUser[0];
+				iden.save();
+			}
+			return;
+		}
+		else{
+			
+			Identity.findOne({belongsTo: myID, email: emailUser[0]}, function(err,iden){
+			
+			if(err){
+				console.log(err);
+				return;
+			}
+				
+			//We found it!
+			if(iden){
+				console.log("Found " + iden.name + " using email: " + emailUser[0]);
+				if(!iden.name){
+					iden.name = emailUser[1];
+					iden.save();
+								
+				}
+				return;
+			}
+			else{
+				
+				//Couldn't find this person. We should make a new identity.
+				console.log(myID);
+				Identity.create({
+					name: emailUser[1],
+					belongsTo: myID,
+					email: emailUser[0],
+				}, function(err){
+					if(err)
+					  console.log("Error saving new email identity");
+				});
+			}
+	});
+		}
+	});
+	
+	
+}
+
 //Use this route to authenticate Twitter users
 app.get('/auth/twitter', passport.authenticate('twitter'));
 
@@ -340,9 +406,6 @@ app.get('/auth/twitter', passport.authenticate('twitter'));
 app.get('/auth/twitter/callback', passport.authenticate('twitter'),
   function(req,res){
   	if(req.user){
-  		console.log("!!!!");
-  		console.log(req.user);
-  		console.log(req.session.myid);
   		
   		twitter.query()
       	  .get('friends/ids')
@@ -358,14 +421,16 @@ app.get('/auth/twitter/callback', passport.authenticate('twitter'),
   		
   	}
   	else{
-  		console.log(":(");
+  		console.log("Could not identify user!");
   	}
-  }); //failing is actually succeding
+  	
+  	res.redirect('/dashboard');
+  });
 
 
 //Test success
 app.get('/auth/twitter/failure', function(req,res){
-  //console.log(req.user);
+  console.log('Twitter authorization failed!');
   res.redirect('/dashboard');
 });
 
@@ -382,28 +447,12 @@ app.get('/tUsers', function(req,res){
 });
 
 //Facebook routes
-app.get('/auth/facebook', passport.authenticate('facebook', { scope: ['read_stream', 'publish_actions','email','user_friends'] }));
+app.get('/auth/facebook', passport.authenticate('facebook', { scope: ['public_profile','email','user_friends'] }));
 
 
 app.get('/auth/facebook/callback', passport.authenticate('facebook'),function(req,res){
 
 	if(req.user){
-  		console.log("!!!!");
-  		//console.log(req.user);
-  		//console.log(req.session.myid);
-  		/*
-  		facebook.get('/' + profile.id+'/friends', {
-      qs:{
-        access_token : accessToken,
-      }
-    }, function (err, res, body) {
-      body.data.forEach(function(element,index,array){
-      	var temp = {name : element['name'], id : element['id']};
-      	console.log(temp);
-      	facebookUser.friends.push(temp);
-      	
-      });
-      */
   		
   		console.log("Going to query some Facebook friends");
   		
@@ -413,7 +462,7 @@ app.get('/auth/facebook/callback', passport.authenticate('facebook'),function(re
   		  .request(function(err,res,body){
   		  	
   		  	body.data.forEach(function(element,index,array){
-  		  		console.log(element['name']);
+  		  		console.log(element);
   		  		
   		  		var found = false;
 
@@ -421,84 +470,101 @@ app.get('/auth/facebook/callback', passport.authenticate('facebook'),function(re
 				
 				//Facebook gives us email, so let's try using that first
 				
+				//For some reason, facebook is refusing to give us email. Use this work around until
+				//we can get email
+				element['email'] = "AAAAAAAAAAAAAAAAA";
+				
 				Identity.findOne({belongsTo: req.session.myid, email: element['email']}, function(err,iden){
-					
+					if(err){
+						console.log(err);
+						return;
+					}
 					//We found it!
 					if(iden){
 						console.log("Found " + iden.name + " using email: " + element['email']);
+						/*Identity.update({belongsTo: req.session.myid, email: element['email']},
+						{
+							Facebook: element['name'],
+						});
+						*/
 						iden.Facebook = element['name'];
 						iden.save();
-						found = true;
+						
+						return;
 					}
-				});
-				
-				//Maybe we can search by name...
-				if(!found){
-					Identity.findOne({belongsTo: req.session.myid, name: element['name']}, function(err,iden){
-					
+					else{
+						Identity.findOne({belongsTo: req.session.myid, name: element['name']}, function(err,iden){
+						if(err){
+							console.log(err);
+							return;
+						}
 						//We found it!
 						if(iden){
 							console.log("Found " + iden.name + " using name: " + element['name']);
-							iden.Facebook = element['name'];
-							iden.firstName = element['first_name'];
-							iden.lastName = element['last_name'];
-							iden.save();
-							found = true;
-						}
-					});
-				}
-				
-				//What about first and last name separate?
-				if(!found){
-					Identity.findOne({belongsTo: req.session.myid, firstName: element['first_name'], lastName: element['last_name']}, function(err,iden){
-					
-						//We found it!
-						if(iden){
-							console.log("Found " + iden.name + " using first and last name: " + element['first_name'] + " " + element['last_name']);
+							/*Identity.update({belongsTo: req.session.myid, name: element['name']},
+							{
+								Facebook: element['name'],
+								//firstName: element['first_name'],
+								//lastName: element['last_name'],
+							});
+							*/
+							
 							iden.Facebook = element['name'];
 							iden.save();
-							found = true;
+						
+							return;
+						}
+						else{
+							Identity.findOne({belongsTo: req.session.myid, firstName: element['first_name'], lastName: element['last_name']}, function(err,iden){
+							if(err){
+								console.log(err);
+								return;
+							}
+							//We found it!
+							if(iden){
+								/*console.log("Found " + iden.name + " using first and last name: " + element['first_name'] + " " + element['last_name']);
+								Identity.update({belongsTo: req.session.myid, firstName: element['first_name'], lastName: element['last_name']},
+								{
+									Facebook: element['name'],
+								});*/
+								
+								iden.Facebook = element['name'];
+								iden.save();
+								
+								return;
+							}
+							else{
+								
+								console.log("Making a new identity for " + element['name']);
+								  Identity.create({
+								    name: element['name'],
+								    //firstName: element['first_name'],
+								    //lastName: element['last_name'],
+								    belongsTo: req.session.myid,
+								    Facebook: element['name'],
+								    Twitter: '',
+								}, function(err, newFacebook){
+									if(err)
+									  console.log("Error saving Facebook identity");
+								   });
+							}
+							
+							});
 						}
 					});
-				}
-				
-			   
-			   //We couldn't find it...'
-				if(!found){
-				  console.log("Making a new identity for " + element['name']);
-				  Identity.create({
-				    name: element['name'],
-				    firstName: element['first_name'],
-				    lastName: element['last_name'],
-				    belongsTo: req.session.myid,
-				    Facebook: element['name'],
-				}, function(err, newFacebook){
-					if(err)
-					  console.log("Error saving Facebook identity");
-				   });
-			    }
+					}
+				});
   		  		
   		  	});
   		  	
   		  });
-  		/*
-  		twitter.query()
-      	  .get('friends/ids')
-      	  .qs({user_id: req.user.id})
-      	  .auth(req.user.token,req.user.tokenSecret)
-      	  .request(function(err, res, body){
-      		//twitterUser.friendIDs = body.ids;
-      		console.log(body);
-        	body.ids.forEach(function(element,index,array){
-          	checkTwitterUser(req.user.token, req.user.tokenSecret, element, req);
-        });
-        
-      }); */
   		
   	}
   	else{
-  		console.log(":(");
+  		console.log("Could not establish identity!");
   	}
+  	
+  	res.redirect('/dashboard');
 });
 
 
@@ -524,13 +590,41 @@ app.get('/fbFriends', function(req,res){
 
 app.post('/auth/local',
   passport.authenticate('local', { successRedirect: '/newsession',
-                                   failureRedirect: '/test',
+                                   failureRedirect: '/',
                                    failureFlash: true })
 );
 
+app.post('/auth/newaccount', function(req,res){
+	
+	console.log(req.body.username);
+	console.log(req.body.password);
+	console.log(req.body.password2);
+
+	if(req.body.email != '' && req.body.password != '' && req.body.password2 != ''){
+		if(req.body.password == req.body.password2){
+			User.create({
+				username: req.body.username,
+				password: req.body.password,
+			}, function(err, newAccount){
+				if(err)
+				  console.log("Error making new account");
+			});
+		}
+		else{
+			res.redirect('/signup');
+		}
+		
+	}
+	else{
+		res.redirect('/signup');
+	}
+	
+	res.redirect('/');
+});
+
 app.get('/newsession',function(req,res){
 	req.session.myid = req.user._id;
-	res.redirect('/');
+	res.redirect('/dashboard');
 });
 
 app.get('/test', function(req, res){
@@ -553,7 +647,14 @@ app.get('/contactus', function(req,res){
 });
 
 app.get('/dashboard', function(req,res){
-	res.render('dashboard');
+	if(req.session.myid){
+		console.log(req.session.myid);
+		res.render('dashboard');
+	}
+	else{
+		res.redirect('/');
+	}
+	
 });
 
 app.get('/logout', function(req, res){
