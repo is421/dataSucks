@@ -37,7 +37,9 @@ body
               span.icon-bar
             // Start: Primary navigation
             .nav-collapse.collapse
-              ul.nav.pull-right               
+              ul.nav.pull-right 
+                li
+                  a(href='/contacts') Contacts              
                 li
                   a(href='/about') About
                 li
@@ -49,6 +51,10 @@ body
     // Start: MAIN CONTENT
     .content
       .container
+        if pf == 'pass'
+          .alert.alert-success Successful Linkage!
+        else if pf == 'fail'
+          .alert.alert-danger= error
         .column
           .span6.offset3
             h4.widget-header
@@ -72,7 +78,7 @@ body
                   .remember-me
                   |        
                   br           
-                  input.btn.btn-primary.btn-large(type='submit', value='Signup')
+                  input.btn.btn-primary.btn-large(type='submit', value='Link')
                 |          
         .column
           .span6.offset3

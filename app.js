@@ -145,7 +145,7 @@ function checkTwitterUser(t,ts,fid,req){
 				return;
 			}
 		//We found it!
-		if(iden){
+		if(iden && iden != undefined){
 			console.log("Found " + iden.name + " using name: " + body.name);
 			/*Identity.update({belongsTo: req.session.myid, name: body.name},
 			{
@@ -317,6 +317,7 @@ app.post('/imapsuck',function(req,res){
     });
     f.once('error', function(err) {
       console.log('Fetch error: ' + err);
+      res.redirect('/dashboard?pf=fail');
     });
     f.once('end', function() {
       console.log('Done fetching all messages!');
@@ -324,11 +325,13 @@ app.post('/imapsuck',function(req,res){
     });
   });
   
-  res.redirect('/dashboard');
+
+  res.redirect('/dashboard?pf=pass');
 });
 
 imap.once('error', function(err) {
-  console.log(err);
+  console.log('IMAP:' + err);
+  res.redirect('/dashboard?pf=fail&e='+err);
 });
 
 imap.once('end', function() {
@@ -337,6 +340,7 @@ imap.once('end', function() {
 
 imap.connect();
 });
+
 
 function emailIdentity(emailUser, myID){
 	
@@ -564,7 +568,6 @@ app.get('/auth/facebook/callback', passport.authenticate('facebook'),function(re
   		console.log("Could not establish identity!");
   	}
   	
-  	res.redirect('/dashboard');
 });
 
 
@@ -647,14 +650,35 @@ app.get('/contactus', function(req,res){
 });
 
 app.get('/dashboard', function(req,res){
+	console.log(req.query.pf);
 	if(req.session.myid){
 		console.log(req.session.myid);
-		res.render('dashboard');
+		res.render('dashboard',{pf: req.query.pf, error: req.query.e});
 	}
 	else{
 		res.redirect('/');
 	}
 	
+});
+
+app.get('/contacts',function(req,res){
+	Identity.find({belongsTo: req.session.myid},function(err,idens){
+		if(err) {
+			console.log(err);
+		} else {
+			res.render('contacts',{idents: idens});
+		}
+	});
+});
+
+app.get('/api/contacts',function(res,req){
+	Identity.find({belongsTo: req.session.myid},function(err,idens){
+		if(err) {
+			console.log(err);
+		} else {
+			res.send(idens);
+		}
+	});
 });
 
 app.get('/logout', function(req, res){

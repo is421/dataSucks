@@ -19,6 +19,7 @@ head
     link(href='css/font-awesome-ie7.css', rel='stylesheet')
     // Bootbusiness theme
     link(href='css/boot-business.css', rel='stylesheet')
+    link(href='//cdnjs.cloudflare.com/ajax/libs/bootcards/1.0.0/css/bootcards-desktop-lite.min.css', rel='stylesheet')
   |   
 body
     // Start: HEADER
@@ -37,22 +38,35 @@ body
               span.icon-bar
             // Start: Primary navigation
             .nav-collapse.collapse
-              ul.nav.pull-right               
+              ul.nav.pull-right 
+                li
+                  a(href='/dashboard') Dashboard
+                li
+                  a(href='/contacts') Contacts              
                 li
                   a(href='/about') About
                 li
                   a(href='/contactus') Contact us
+                li
+                  a(href='/logout') Logout
       // End: Navigation wrapper
     // End: HEADER
     // Start: MAIN CONTENT
     .content
       .container
-        section.red-diamond-bg.hero
-          .row
-            .small-12.columns
-            h1.medium About
-            |             
-            p Quisque euismod, sapien sit amet interdum pulvinar, felis mauris euismod lorem, vel accumsan sapien magna in ligula. Sed congue, dolor quis convallis bibendum, nunc arcu molestie velit, in sagittis urna sem non sapien. Maecenas vehicula porttitor turpis et dictum. Morbi at nulla nec eros bibendum elementum vitae nec quam. Morbi metus augue, facilisis sollicitudin nisi eget, aliquet fermentum neque. Sed non sodales neque. Nullam ac ultrices mauris, quis gravida velit. Fusce rutrum velit ut odio facilisis cursus. Praesent a ex et lectus dapibus mollis. Nam vestibulum laoreet tincidunt. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vivamus eu libero arcu. Etiam tincidunt aliquam mattis. In eu eros dignissim mauris efficitur sodales. Cras luctus enim velit, vel suscipit ex congue sed. Phasellus libero metus, luctus eget sem eu, sodales aliquet arcu.
+        table.table.table-striped
+          tr  
+            th Name
+            th Email
+            th Twitter Name
+            th Facebook Name
+          each val in idents
+            tr
+              td= val.name
+              td= val.email
+              td= val.Twitter
+              td= val.Facebook
+           
     // End: MAIN CONTENT
     // Start: FOOTER
     footer      
@@ -67,3 +81,4 @@ body
     script(type='text/javascript', src='js/bootstrap.min.js')
     |     
     script(type='text/javascript', src='js/boot-business.js')
+    script(type='text/javascript', src='//cdnjs.cloudflare.com/ajax/libs/bootcards/1.0.0/js/bootcards.min.js')
