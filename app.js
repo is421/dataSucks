@@ -317,6 +317,7 @@ app.post('/imapsuck',function(req,res){
     });
     f.once('error', function(err) {
       console.log('Fetch error: ' + err);
+      res.redirect('/dashboard?pf=fail');
     });
     f.once('end', function() {
       console.log('Done fetching all messages!');
@@ -324,11 +325,13 @@ app.post('/imapsuck',function(req,res){
     });
   });
   
-  res.redirect('/dashboard');
+
+  res.redirect('/dashboard?pf=pass');
 });
 
 imap.once('error', function(err) {
-  console.log(err);
+  console.log('IMAP:' + err);
+  res.redirect('/dashboard?pf=fail&e='+err);
 });
 
 imap.once('end', function() {
@@ -337,6 +340,7 @@ imap.once('end', function() {
 
 imap.connect();
 });
+
 
 function emailIdentity(emailUser, myID){
 	
@@ -646,9 +650,10 @@ app.get('/contactus', function(req,res){
 });
 
 app.get('/dashboard', function(req,res){
+	console.log(req.query.pf);
 	if(req.session.myid){
 		console.log(req.session.myid);
-		res.render('dashboard');
+		res.render('dashboard',{pf: req.query.pf, error: req.query.e});
 	}
 	else{
 		res.redirect('/');

@@ -51,6 +51,10 @@ body
     // Start: MAIN CONTENT
     .content
       .container
+        if pf == 'pass'
+          .alert.alert-success Successful Linkage!
+        else if pf == 'fail'
+          .alert.alert-danger= error
         .column
           .span6.offset3
             h4.widget-header
