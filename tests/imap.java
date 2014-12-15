@@ -46,11 +46,11 @@ public class imap {
         btn.submit();
         
         
-//        if(driver.getCurrentUrl().equals("http://localhost/dashboard")){
-//        	System.out.println("Success!");
-//        } else {
-//        	System.out.println("Fail");
-//        }
+        if(driver.findElements(By.cssSelector("div[class=\"alert alert-danger\"]")).size() != 0){
+            System.out.println(driver.findElement(By.cssSelector("div[class=\"alert alert-danger\"]")).getText());
+        } else {
+             System.out.println(driver.findElement(By.cssSelector("div[class=\"alert alert-success\"]")).getText());
+        }
         
     }
 }
