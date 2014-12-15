@@ -45,12 +45,11 @@ public class imap {
         password.sendKeys(pass);
         btn.submit();
         
-        
-        if(driver.findElements(By.cssSelector("div[class=\"alert alert-danger\"]")).size() != 0){
-            System.out.println(driver.findElement(By.cssSelector("div[class=\"alert alert-danger\"]")).getText());
+//        driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);     
+        if(driver.findElements(By.cssSelector(".alert.alert-danger")).size() != 0){
+            System.out.println(driver.findElement(By.cssSelector(".alert.alert-danger")).getText());
         } else {
-             System.out.println(driver.findElement(By.cssSelector("div[class=\"alert alert-success\"]")).getText());
+             System.out.println(driver.findElement(By.cssSelector(".alert.alert-success")).getText());
         }
-        
     }
 }
