@@ -39,7 +39,7 @@ public class imap {
         
         WebElement username = driver.findElement(By.name("username"));
         WebElement password = driver.findElement(By.name("password"));
-        WebElement btn = driver.findElement(By.cssSelector("input[value=\"Signup\"]"));
+        WebElement btn = driver.findElement(By.cssSelector("input[value=\"Link\"]"));
         
         username.sendKeys(name);
         password.sendKeys(pass);
